@@ -99,7 +99,7 @@ public class PlayerCache implements CachedData {
         // todo: may need to move this out so spectators don't get sent wrong abilities
         consumer.accept(new ClientboundPlayerAbilitiesPacket(this.invincible, this.canFly, this.flying, this.creative, this.flySpeed, this.walkSpeed));
         consumer.accept(new ClientboundChangeDifficultyPacket(this.difficulty, this.isDifficultyLocked));
-        consumer.accept(new ClientboundGameEventPacket(GameEvent.CHANGE_GAMEMODE, this.gameMode));
+        consumer.accept(new ClientboundGameEventPacket(GameEvent.CHANGE_GAME_MODE, this.gameMode));
         consumer.accept(new ClientboundEntityEventPacket(this.thePlayer.getEntityId(), this.opLevel));
         var container = this.inventoryCache.getContainers().get(this.inventoryCache.getOpenContainerId());
         if (container == this.inventoryCache.getContainers().defaultReturnValue()) {

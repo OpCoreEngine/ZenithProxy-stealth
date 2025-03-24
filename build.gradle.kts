@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.zenith"
-version = "1.21.4"
+version = "1.21.5"
 
 val javaReleaseVersion = 21
 val javaVersion = JavaLanguageVersion.of(23)
@@ -55,7 +55,7 @@ dependencies {
         exclude(group = "net.java.dev.jna")
         exclude(group = "com.google.crypto.tink")
     }
-    api("com.github.rfresh2:MCProtocolLib:1.21.4.17") {
+    api("com.github.rfresh2:MCProtocolLib:1.21.5.1") {
         exclude(group = "io.netty")
     }
     val nettyVersion = "4.1.119.Final"

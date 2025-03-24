@@ -6,7 +6,6 @@ import com.zenith.network.client.handler.incoming.inventory.*;
 import com.zenith.network.client.handler.incoming.level.*;
 import com.zenith.network.client.handler.incoming.scoreboard.*;
 import com.zenith.network.client.handler.incoming.spawn.AddEntityHandler;
-import com.zenith.network.client.handler.incoming.spawn.AddExperienceOrbHandler;
 import com.zenith.network.client.handler.incoming.spawn.SpawnPositionHandler;
 import com.zenith.network.client.handler.outgoing.OutgoingChatCommandSignedHandler;
 import com.zenith.network.client.handler.outgoing.OutgoingChatHandler;
@@ -41,8 +40,6 @@ import org.geysermc.mcprotocollib.protocol.packet.handshake.serverbound.ClientIn
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.*;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddExperienceOrbPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.border.ClientboundInitializeBorderPacket;
@@ -198,7 +195,6 @@ public final class ZenithHandlerCodec {
                 .registerInbound(ClientboundMoveVehiclePacket.class, new MoveVehicleHandler())
                 .registerInbound(ClientboundSetPassengersPacket.class, new EntitySetPassengersHandler())
                 .registerInbound(ClientboundTeleportEntityPacket.class, new TeleportEntityHandler())
-                .registerInbound(ClientboundAddExperienceOrbPacket.class, new AddExperienceOrbHandler())
                 .registerInbound(ClientboundAddEntityPacket.class, new AddEntityHandler())
                 .registerInbound(ClientboundSetDefaultSpawnPositionPacket.class, new SpawnPositionHandler())
                 .registerOutbound(ServerboundChatPacket.class, new OutgoingChatHandler())
