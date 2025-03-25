@@ -55,7 +55,7 @@ dependencies {
         exclude(group = "net.java.dev.jna")
         exclude(group = "com.google.crypto.tink")
     }
-    api("com.github.rfresh2:MCProtocolLib:1.21.5.1") {
+    api("com.github.rfresh2:MCProtocolLib:1.21.5.4") {
         exclude(group = "io.netty")
     }
     val nettyVersion = "4.1.119.Final"
@@ -91,11 +91,11 @@ dependencies {
     api("org.jline:jline:3.29.0")
     api("org.jline:jline-terminal-jni:3.29.0")
     api("ar.com.hjg:pngj:2.1.0")
-    api("com.zaxxer:HikariCP:6.2.1")
+    api("com.zaxxer:HikariCP:6.3.0")
     api("org.postgresql:postgresql:42.7.5")
     api("org.jdbi:jdbi3-postgres:3.48.0")
-    api("com.google.guava:guava:33.4.0-jre")
-    api("ch.qos.logback:logback-classic:1.5.17")
+    api("com.google.guava:guava:33.4.6-jre")
+    api("ch.qos.logback:logback-classic:1.5.18")
     api("org.slf4j:slf4j-api:2.0.17")
     api("org.slf4j:jul-to-slf4j:2.0.17")
     api("com.mojang:brigadier:1.3.10")
