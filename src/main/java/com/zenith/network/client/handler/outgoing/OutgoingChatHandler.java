@@ -29,7 +29,15 @@ public class OutgoingChatHandler implements PacketHandler<ServerboundChatPacket,
         CACHE.getChatCache().setLastChatTimestamp(packetTime);
         if (CACHE.getChatCache().canUseChatSigning()) {
             int offset = 0;
-            var signedChat = new ServerboundChatPacket(packet.getMessage(), packetTime, 0, null, offset, BitSet.valueOf(new byte[20]));
+            var signedChat = new ServerboundChatPacket(
+                packet.getMessage(),
+                packetTime,
+                0,
+                null,
+                offset,
+                BitSet.valueOf(new byte[20]),
+                0 // todo: fix
+            );
             CACHE.getChatCache().getChatSession().sign(signedChat);
             return signedChat;
         } else {

@@ -5,13 +5,14 @@ import com.zenith.mc.item.ItemRegistry;
 import com.zenith.util.math.MathHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftPacket;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.*;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSetCarriedItemPacket;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Collections;
 
 import static com.zenith.Shared.CACHE;
 import static com.zenith.Shared.CLIENT_LOG;
@@ -95,8 +96,9 @@ public record ContainerClickAction(int slotId, ContainerActionType actionType, C
             slotId,
             actionType,
             param,
-            predictedMouseStack,
-            changedSlots
+            // todo: fix
+            null,
+            Collections.emptyMap()
         );
     }
     /**
@@ -132,8 +134,9 @@ public record ContainerClickAction(int slotId, ContainerActionType actionType, C
             -999,
             actionType,
             param,
-            predictedMouseStack,
-            Int2ObjectMaps.emptyMap()
+            // todo: fix
+            null,
+            Collections.emptyMap()
         );
     }
 
@@ -175,8 +178,9 @@ public record ContainerClickAction(int slotId, ContainerActionType actionType, C
             slotId,
             actionType,
             param,
-            Container.EMPTY_STACK,
-            changedSlots
+            // todo: fix
+            null,
+            Collections.emptyMap()
         );
     }
 
@@ -217,8 +221,9 @@ public record ContainerClickAction(int slotId, ContainerActionType actionType, C
             slotId,
             actionType,
             param,
-            Container.EMPTY_STACK,
-            changedSlots
+            // todo: fix
+            null,
+            Collections.emptyMap()
         );
     }
 

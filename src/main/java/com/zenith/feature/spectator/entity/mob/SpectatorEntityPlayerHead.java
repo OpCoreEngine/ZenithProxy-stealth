@@ -28,7 +28,7 @@ public class SpectatorEntityPlayerHead extends SpectatorMob {
         dataComponentsMap.put(DataComponentTypes.PROFILE, new ObjectDataComponent<GameProfile>(DataComponentTypes.PROFILE, spectatorProfile));
         final DataComponents dataComponents = new DataComponents(dataComponentsMap);
         return metadataListOf(
-            new ObjectEntityMetadata<>(23, MetadataTypes.ITEM, new ItemStack(ItemRegistry.PLAYER_HEAD.id(), 1, dataComponents))
+            new ObjectEntityMetadata<>(23, MetadataTypes.ITEM_STACK, new ItemStack(ItemRegistry.PLAYER_HEAD.id(), 1, dataComponents))
         );
     }
 

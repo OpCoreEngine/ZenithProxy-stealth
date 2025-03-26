@@ -79,13 +79,15 @@ public class InventoryCache {
     }
 
     public void handleContainerClick(ServerboundContainerClickPacket packet) {
-        mouseStack = packet.getCarriedItem();
+        // todo: fix
+//        mouseStack = packet.getCarriedItem();
         var container = containers.get(packet.getContainerId());
         if (container == containers.defaultReturnValue()) {
             CACHE_LOG.debug("Attempted to click in unknown container {}", packet.getContainerId());
             return;
         }
-        packet.getChangedSlots().forEach(container::setItemStack);
+        // todo: fix
+//        packet.getChangedSlots().forEach(container::setItemStack);
     }
 
     public synchronized void reset() {
