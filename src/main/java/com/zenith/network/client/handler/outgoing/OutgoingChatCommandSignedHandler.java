@@ -24,7 +24,8 @@ public class OutgoingChatCommandSignedHandler implements PacketHandler<Serverbou
                     packet.getSignatures(),
                     0,
                     BitSet.valueOf(new byte[20]),
-                    (byte) 0); // todo: fix
+                    (byte) 0
+                );
                 CACHE.getChatCache().getChatSession().sign(signedWhisper);
                 return signedWhisper;
             }

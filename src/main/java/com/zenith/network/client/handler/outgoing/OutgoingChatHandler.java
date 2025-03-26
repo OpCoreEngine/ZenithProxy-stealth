@@ -36,7 +36,7 @@ public class OutgoingChatHandler implements PacketHandler<ServerboundChatPacket,
                 null,
                 offset,
                 BitSet.valueOf(new byte[20]),
-                0 // todo: fix
+                0
             );
             CACHE.getChatCache().getChatSession().sign(signedChat);
             return signedChat;
