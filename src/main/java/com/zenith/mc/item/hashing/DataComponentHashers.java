@@ -32,10 +32,9 @@ import org.geysermc.mcprotocollib.protocol.data.game.level.sound.BuiltinSound;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 @SuppressWarnings("UnstableApiUsage")
-public class ComponentHashers {
+public class DataComponentHashers {
     private static final Map<DataComponentType<?>, MinecraftHasher<?>> hashers = new HashMap<>();
 
     static {
@@ -48,10 +47,10 @@ public class ComponentHashers {
         // TODO custom name, component
         // TODO item name, component
 
+        register(DataComponentTypes.CUSTOM_NAME, ComponentHasher.COMPONENT); // TODO test
+        register(DataComponentTypes.ITEM_NAME, ComponentHasher.COMPONENT);
         register(DataComponentTypes.ITEM_MODEL, MinecraftHasher.KEY);
-
-        // TODO lore, component
-
+        register(DataComponentTypes.LORE, ComponentHasher.COMPONENT.list());
         register(DataComponentTypes.RARITY, MinecraftHasher.RARITY);
         register(DataComponentTypes.ENCHANTMENTS, MinecraftHasher.map(RegistryHasher.ENCHANTMENT, MinecraftHasher.INT).convert(ItemEnchantments::getEnchantments));
 
@@ -71,7 +70,7 @@ public class ComponentHashers {
         registerInt(DataComponentTypes.REPAIR_COST);
 
         register(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, MinecraftHasher.BOOL);
-        //register(DataComponentTypes.INTANGIBLE_PROJECTILE); // TODO MCPL is wrong
+        registerUnit(DataComponentTypes.INTANGIBLE_PROJECTILE);
 
         registerMap(DataComponentTypes.FOOD, builder -> builder
             .accept("nutrition", MinecraftHasher.INT, FoodProperties::getNutrition)
@@ -125,8 +124,8 @@ public class ComponentHashers {
         registerInt(DataComponentTypes.MAP_ID);
         register(DataComponentTypes.MAP_DECORATIONS, MinecraftHasher.MNBT);
 
-        // TODO charged projectiles also need the recursion™
-        // TODO same for bundle contents
+        register(DataComponentTypes.CHARGED_PROJECTILES, RegistryHasher.ITEM_STACK.list()); // TODO test one of these, preferably bundle contents which is more complicated
+        register(DataComponentTypes.BUNDLE_CONTENTS, RegistryHasher.ITEM_STACK.list());
 
         registerMap(DataComponentTypes.POTION_CONTENTS, builder -> builder
             .optional("potion", RegistryHasher.POTION, PotionContents::getPotionId, -1)
@@ -135,6 +134,37 @@ public class ComponentHashers {
             .optionalNullable("custom_name", MinecraftHasher.STRING, PotionContents::getCustomName));
 
         register(DataComponentTypes.POTION_DURATION_SCALE, MinecraftHasher.FLOAT);
+        register(DataComponentTypes.SUSPICIOUS_STEW_EFFECTS, RegistryHasher.SUSPICIOUS_STEW_EFFECT.list());
+
+        registerMap(DataComponentTypes.WRITABLE_BOOK_CONTENT, builder -> builder
+            .optionalList("pages", MinecraftHasher.STRING.filterable(), WritableBookContent::getPages));
+        registerMap(DataComponentTypes.WRITTEN_BOOK_CONTENT, builder -> builder
+            .accept("title", MinecraftHasher.STRING.filterable(), WrittenBookContent::getTitle)
+            .accept("author", MinecraftHasher.STRING, WrittenBookContent::getAuthor)
+            .accept("generation", MinecraftHasher.INT, WrittenBookContent::getGeneration)
+            .optionalList("pages", ComponentHasher.COMPONENT.filterable(), WrittenBookContent::getPages)
+            .optional("resolved", MinecraftHasher.BOOL, WrittenBookContent::isResolved, false));
+
+        register(DataComponentTypes.TRIM, RegistryHasher.ARMOR_TRIM);
+        register(DataComponentTypes.DEBUG_STICK_STATE, MinecraftHasher.MNBT);
+        register(DataComponentTypes.ENTITY_DATA, MinecraftHasher.MNBT);
+        register(DataComponentTypes.BUCKET_ENTITY_DATA, MinecraftHasher.MNBT);
+        register(DataComponentTypes.BLOCK_ENTITY_DATA, MinecraftHasher.MNBT);
+
+        register(DataComponentTypes.INSTRUMENT, RegistryHasher.INSTRUMENT_COMPONENT);
+        register(DataComponentTypes.PROVIDES_TRIM_MATERIAL, RegistryHasher.PROVIDES_TRIM_MATERIAL);
+
+        registerInt(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER);
+
+        register(DataComponentTypes.JUKEBOX_PLAYABLE, RegistryHasher.JUKEBOX_PLAYABLE);
+        register(DataComponentTypes.PROVIDES_BANNER_PATTERNS, MinecraftHasher.TAG);
+        register(DataComponentTypes.RECIPES, MinecraftHasher.NBT_LIST);
+
+        registerMap(DataComponentTypes.LODESTONE_TRACKER, builder -> builder
+            .optionalNullable("target", MinecraftHasher.GLOBAL_POS, LodestoneTracker::getPos)
+            .optional("tracked", MinecraftHasher.BOOL, LodestoneTracker::isTracked, true));
+
+        // TODO firework explosion, fireworks
     }
 
     private static void registerUnit(DataComponentType<Unit> component) {
@@ -145,7 +175,7 @@ public class ComponentHashers {
         register(component, MinecraftHasher.INT);
     }
 
-    private static <T> void registerMap(DataComponentType<T> component, UnaryOperator<MapHasher<T>> builder) {
+    private static <T> void registerMap(DataComponentType<T> component, MapBuilder<T> builder) {
         register(component, MinecraftHasher.mapBuilder(builder));
     }
 

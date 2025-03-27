@@ -178,7 +178,7 @@ public class ComponentHasherTest {
     }
 
     private static <T> void testHash(DataComponentType<T> component, T value, int expected) {
-        int got = ComponentHashers.hash(component, value).asInt();
+        int got = DataComponentHashers.hash(component, value).asInt();
         Assertions.assertEquals(expected, got, "Hash mismatch for " + component + " with value " + value + " - expected " + expected + ", got " + got);
     }
 }
