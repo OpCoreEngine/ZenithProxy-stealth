@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,53 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item;
 
-import java.util.function.UnaryOperator;
+import lombok.Getter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
+import java.util.Locale;
+
+@Getter
+public enum DyeColor {
+    WHITE,
+    ORANGE,
+    MAGENTA,
+    LIGHT_BLUE,
+    YELLOW,
+    LIME,
+    PINK,
+    GRAY,
+    LIGHT_GRAY,
+    CYAN,
+    PURPLE,
+    BLUE,
+    BROWN,
+    GREEN,
+    RED,
+    BLACK;
+
+    private static final DyeColor[] VALUES = values();
+
+    private final String javaIdentifier;
+
+    DyeColor() {
+        this.javaIdentifier = this.name().toLowerCase(Locale.ROOT);
     }
 
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
+    public static @Nullable DyeColor getById(int id) {
+        if (id >= 0 && id < VALUES.length) {
+            return VALUES[id];
+        }
+        return null;
+    }
+
+    public static @Nullable DyeColor getByJavaIdentifier(String javaIdentifier) {
+        for (DyeColor dyeColor : VALUES) {
+            if (dyeColor.javaIdentifier.equals(javaIdentifier)) {
+                return dyeColor;
+            }
+        }
+        return null;
     }
 }

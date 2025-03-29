@@ -35,7 +35,11 @@ import com.viaversion.nbt.tag.*;
 
 import java.util.*;
 
-// Based off the HashOps in mojmap, hashes a component, TODO: documentation
+/**
+ * Encodes primitive Java objects, lists, and maps into a {@link HashCode}, using {@link Hashing#crc32c()} as hash function.
+ *
+ * <p>Based off the {@code HashOps} class in vanilla Java 1.21.5, and is used by {@link MinecraftHasher}.</p>
+ */
 @SuppressWarnings("UnstableApiUsage")
 public class MinecraftHashEncoder {
     private static final byte TAG_EMPTY = 1;

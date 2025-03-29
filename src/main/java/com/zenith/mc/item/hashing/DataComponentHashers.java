@@ -26,11 +26,12 @@
 package com.zenith.mc.item.hashing;
 
 import com.google.common.hash.HashCode;
+import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.*;
 import org.geysermc.mcprotocollib.protocol.data.game.level.sound.BuiltinSound;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -47,15 +48,16 @@ public class DataComponentHashers {
         // TODO custom name, component
         // TODO item name, component
 
-        register(DataComponentTypes.CUSTOM_NAME, ComponentHasher.COMPONENT); // TODO test
+        register(DataComponentTypes.CUSTOM_NAME, ComponentHasher.COMPONENT);
         register(DataComponentTypes.ITEM_NAME, ComponentHasher.COMPONENT);
         register(DataComponentTypes.ITEM_MODEL, MinecraftHasher.KEY);
         register(DataComponentTypes.LORE, ComponentHasher.COMPONENT.list());
         register(DataComponentTypes.RARITY, MinecraftHasher.RARITY);
-        register(DataComponentTypes.ENCHANTMENTS, MinecraftHasher.map(RegistryHasher.ENCHANTMENT, MinecraftHasher.INT).convert(ItemEnchantments::getEnchantments));
+        register(DataComponentTypes.ENCHANTMENTS, RegistryHasher.ITEM_ENCHANTMENTS);
 
-        // TODO can place on/can break on, complicated
-        // TODO attribute modifiers, attribute registry and equipment slot group hashers
+        register(DataComponentTypes.CAN_PLACE_ON, RegistryHasher.ADVENTURE_MODE_PREDICATE);
+        register(DataComponentTypes.CAN_BREAK, RegistryHasher.ADVENTURE_MODE_PREDICATE); // TODO needs tests
+        register(DataComponentTypes.ATTRIBUTE_MODIFIERS, RegistryHasher.ATTRIBUTE_MODIFIER_ENTRY.list().cast(ItemAttributeModifiers::getModifiers)); // TODO needs tests
 
         registerMap(DataComponentTypes.CUSTOM_MODEL_DATA, builder -> builder
             .optionalList("floats", MinecraftHasher.FLOAT, CustomModelData::floats)
@@ -78,9 +80,9 @@ public class DataComponentHashers {
             .optional("can_always_eat", MinecraftHasher.BOOL, FoodProperties::isCanAlwaysEat, false));
         registerMap(DataComponentTypes.CONSUMABLE, builder -> builder
             .optional("consume_seconds", MinecraftHasher.FLOAT, Consumable::consumeSeconds, 1.6F)
-            .optional("animation", MinecraftHasher.ITEM_USE_ANIMATION, Consumable::animation, Consumable.ItemUseAnimation.EAT)
+            .optional("animation", RegistryHasher.ITEM_USE_ANIMATION, Consumable::animation, Consumable.ItemUseAnimation.EAT)
             .optional("sound", RegistryHasher.SOUND_EVENT, Consumable::sound, BuiltinSound.ENTITY_GENERIC_EAT)
-            .optional("has_consume_particles", MinecraftHasher.BOOL, Consumable::hasConsumeParticles, true)); // TODO consume effect needs identifier in MCPL
+            .optionalList("on_consume_effects", RegistryHasher.CONSUME_EFFECT, Consumable::onConsumeEffects));
 
         register(DataComponentTypes.USE_REMAINDER, RegistryHasher.ITEM_STACK);
 
@@ -115,16 +117,24 @@ public class DataComponentHashers {
         registerUnit(DataComponentTypes.GLIDER);
         register(DataComponentTypes.TOOLTIP_STYLE, MinecraftHasher.KEY);
 
-        registerMap(DataComponentTypes.DEATH_PROTECTION, builder -> builder); // TODO consume effect needs identifier in MCPL
-        registerMap(DataComponentTypes.BLOCKS_ATTACKS, builder -> builder); // TODO needs damage types, add a way to cache identifiers without reading objects in registrycache
-        register(DataComponentTypes.STORED_ENCHANTMENTS, MinecraftHasher.map(RegistryHasher.ENCHANTMENT, MinecraftHasher.INT).convert(ItemEnchantments::getEnchantments)); // TODO duplicate code?
+        registerMap(DataComponentTypes.DEATH_PROTECTION, builder -> builder
+            .optionalList("death_effects", RegistryHasher.CONSUME_EFFECT, Function.identity()));
+        registerMap(DataComponentTypes.BLOCKS_ATTACKS, builder -> builder
+            .optional("block_delay_seconds", MinecraftHasher.FLOAT, BlocksAttacks::blockDelaySeconds, 0.0F)
+            .optional("disable_cooldown_scale", MinecraftHasher.FLOAT, BlocksAttacks::disableCooldownScale, 1.0F)
+            .optional("damage_reductions", RegistryHasher.BLOCKS_ATTACKS_DAMAGE_REDUCTION.list(), BlocksAttacks::damageReductions, List.of(new BlocksAttacks.DamageReduction(90.0F, null, 0.0F, 1.0F)))
+            .optional("item_damage", RegistryHasher.BLOCKS_ATTACKS_ITEM_DAMAGE_FUNCTION, BlocksAttacks::itemDamage, new BlocksAttacks.ItemDamageFunction(1.0F, 0.0F, 1.0F))
+            .optionalNullable("bypassed_by", MinecraftHasher.TAG, BlocksAttacks::bypassedBy)
+            .optionalNullable("block_sound", RegistryHasher.SOUND_EVENT, BlocksAttacks::blockSound)
+            .optionalNullable("disabled_sound", RegistryHasher.SOUND_EVENT, BlocksAttacks::disableSound)); // TODO needs tests
+        register(DataComponentTypes.STORED_ENCHANTMENTS, RegistryHasher.ITEM_ENCHANTMENTS);
 
         registerInt(DataComponentTypes.DYED_COLOR);
         registerInt(DataComponentTypes.MAP_COLOR);
         registerInt(DataComponentTypes.MAP_ID);
         register(DataComponentTypes.MAP_DECORATIONS, MinecraftHasher.MNBT);
 
-        register(DataComponentTypes.CHARGED_PROJECTILES, RegistryHasher.ITEM_STACK.list()); // TODO test one of these, preferably bundle contents which is more complicated
+        register(DataComponentTypes.CHARGED_PROJECTILES, RegistryHasher.ITEM_STACK.list());
         register(DataComponentTypes.BUNDLE_CONTENTS, RegistryHasher.ITEM_STACK.list());
 
         registerMap(DataComponentTypes.POTION_CONTENTS, builder -> builder
@@ -164,7 +174,50 @@ public class DataComponentHashers {
             .optionalNullable("target", MinecraftHasher.GLOBAL_POS, LodestoneTracker::getPos)
             .optional("tracked", MinecraftHasher.BOOL, LodestoneTracker::isTracked, true));
 
-        // TODO firework explosion, fireworks
+        register(DataComponentTypes.FIREWORK_EXPLOSION, RegistryHasher.FIREWORK_EXPLOSION);
+        registerMap(DataComponentTypes.FIREWORKS, builder -> builder
+            .optional("flight_duration", MinecraftHasher.BYTE, fireworks -> (byte) fireworks.getFlightDuration(), (byte) 0)
+            .optionalList("explosions", RegistryHasher.FIREWORK_EXPLOSION, Fireworks::getExplosions));
+
+        register(DataComponentTypes.PROFILE, MinecraftHasher.GAME_PROFILE);
+        register(DataComponentTypes.NOTE_BLOCK_SOUND, MinecraftHasher.KEY);
+        register(DataComponentTypes.BANNER_PATTERNS, RegistryHasher.BANNER_PATTERN_LAYER.list());
+        register(DataComponentTypes.BASE_COLOR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.POT_DECORATIONS, RegistryHasher.ITEM.list());
+        register(DataComponentTypes.CONTAINER, RegistryHasher.ITEM_CONTAINER_CONTENTS);
+        register(DataComponentTypes.BLOCK_STATE, MinecraftHasher.map(MinecraftHasher.STRING, MinecraftHasher.STRING).cast(BlockStateProperties::getProperties));
+        register(DataComponentTypes.BEES, RegistryHasher.BEEHIVE_OCCUPANT.list());
+
+        register(DataComponentTypes.LOCK, MinecraftHasher.MNBT);
+        register(DataComponentTypes.CONTAINER_LOOT, MinecraftHasher.MNBT);
+        register(DataComponentTypes.BREAK_SOUND, RegistryHasher.SOUND_EVENT);
+
+        register(DataComponentTypes.VILLAGER_VARIANT, RegistryHasher.VILLAGER_TYPE);
+        register(DataComponentTypes.WOLF_VARIANT, RegistryHasher.WOLF_VARIANT);
+        register(DataComponentTypes.WOLF_SOUND_VARIANT, RegistryHasher.WOLF_SOUND_VARIANT);
+        register(DataComponentTypes.WOLF_COLLAR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.FOX_VARIANT, RegistryHasher.FOX_VARIANT);
+        register(DataComponentTypes.SALMON_SIZE, RegistryHasher.SALMON_VARIANT);
+        register(DataComponentTypes.PARROT_VARIANT, RegistryHasher.PARROT_VARIANT);
+        register(DataComponentTypes.TROPICAL_FISH_PATTERN, RegistryHasher.TROPICAL_FISH_PATTERN);
+        register(DataComponentTypes.TROPICAL_FISH_BASE_COLOR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.TROPICAL_FISH_PATTERN_COLOR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.MOOSHROOM_VARIANT, RegistryHasher.MOOSHROOM_VARIANT);
+        register(DataComponentTypes.RABBIT_VARIANT, RegistryHasher.RABBIT_VARIANT);
+        register(DataComponentTypes.PIG_VARIANT, RegistryHasher.PIG_VARIANT);
+        register(DataComponentTypes.COW_VARIANT, RegistryHasher.COW_VARIANT);
+        register(DataComponentTypes.CHICKEN_VARIANT, MinecraftHasher.KEY
+            .cast(holder -> "chiken")); // todo: xdd
+//            .cast(holder -> holder.getOrCompute(id -> JavaRegistries.CHICKEN_VARIANT.keyFromNetworkId(id)))); // Why, Mojang?
+        register(DataComponentTypes.FROG_VARIANT, RegistryHasher.FROG_VARIANT);
+        register(DataComponentTypes.HORSE_VARIANT, RegistryHasher.HORSE_VARIANT);
+        register(DataComponentTypes.PAINTING_VARIANT, RegistryHasher.PAINTING_VARIANT);
+        register(DataComponentTypes.LLAMA_VARIANT, RegistryHasher.LLAMA_VARIANT);
+        register(DataComponentTypes.AXOLOTL_VARIANT, RegistryHasher.AXOLOTL_VARIANT);
+        register(DataComponentTypes.CAT_VARIANT, RegistryHasher.CAT_VARIANT);
+        register(DataComponentTypes.CAT_COLLAR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.SHEEP_COLOR, MinecraftHasher.DYE_COLOR);
+        register(DataComponentTypes.SHULKER_COLOR, MinecraftHasher.DYE_COLOR);
     }
 
     private static void registerUnit(DataComponentType<Unit> component) {
@@ -189,7 +242,7 @@ public class DataComponentHashers {
     public static <T> MinecraftHasher<T> hasherOrEmpty(DataComponentType<T> component) {
         MinecraftHasher<T> hasher = (MinecraftHasher<T>) hashers.get(component);
         if (hasher == null) {
-            return MinecraftHasher.UNIT.convert(value -> Unit.INSTANCE);
+            return MinecraftHasher.UNIT.cast(value -> Unit.INSTANCE);
         }
         return hasher;
     }
@@ -197,8 +250,30 @@ public class DataComponentHashers {
     public static <T> HashCode hash(DataComponentType<T> component, T value) {
         MinecraftHasher<T> hasher = (MinecraftHasher<T>) hashers.get(component);
         if (hasher == null) {
-            throw new IllegalStateException("Unregistered hasher for component " + component + "!"); // TODO we might not have hashers for every component, in which case, fix this
+            throw new IllegalStateException("Unregistered hasher for component " + component + "!");
         }
         return hasher.hash(value, new MinecraftHashEncoder());
+    }
+
+    public static HashedStack hashStack(ItemStack stack) {
+        if (stack == null) {
+            return null;
+        }
+
+        DataComponents patch = stack.getDataComponents();
+        if (patch == null) {
+            return new HashedStack(stack.getId(), stack.getAmount(), Map.of(), Set.of());
+        }
+        Map<DataComponentType<?>, DataComponent<?, ?>> components = patch.getDataComponents();
+        Map<DataComponentType<?>, Integer> hashedAdditions = new HashMap<>();
+        Set<DataComponentType<?>> removals = new HashSet<>();
+        for (Map.Entry<DataComponentType<?>, DataComponent<?, ?>> component : components.entrySet()) {
+            if (component.getValue().getValue() == null) {
+                removals.add(component.getKey());
+            } else {
+                hashedAdditions.put(component.getKey(), hash((DataComponentType) component.getKey(), component.getValue().getValue()).asInt());
+            }
+        }
+        return new HashedStack(stack.getId(), stack.getAmount(), hashedAdditions, removals);
     }
 }

@@ -23,17 +23,41 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item.hashing.data.entity;
 
-import java.util.function.UnaryOperator;
+// Named by Java ID
+public enum TropicalFishPattern {
+    KOB(Base.SMALL, 0),
+    SUNSTREAK(Base.SMALL, 1),
+    SNOOPER(Base.SMALL, 2),
+    DASHER(Base.SMALL, 3),
+    BRINELY(Base.SMALL, 4),
+    SPOTTY(Base.SMALL, 5),
+    FLOPPER(Base.LARGE, 0),
+    STRIPEY(Base.LARGE, 1),
+    GLITTER(Base.LARGE, 2),
+    BLOCKFISH(Base.LARGE, 3),
+    BETTY(Base.LARGE, 4),
+    CLAYFISH(Base.LARGE, 5);
 
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
+    private final int packedId;
+
+    TropicalFishPattern(Base base, int id) {
+        this.packedId = base.ordinal() | id << 8;
     }
 
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
+    // Ordered by Java ID
+    enum Base {
+        SMALL,
+        LARGE
+    }
+
+    public static TropicalFishPattern fromPackedId(int packedId) {
+        for (TropicalFishPattern pattern : values()) {
+            if (pattern.packedId == packedId) {
+                return pattern;
+            }
+        }
+        throw new IllegalArgumentException("Illegal packed tropical fish pattern ID");
     }
 }

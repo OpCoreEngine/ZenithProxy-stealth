@@ -10,6 +10,8 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Shared.CACHE_LOG;
+import static com.zenith.Shared.CLIENT_LOG;
+import static java.util.Objects.isNull;
 
 @Data
 public class InventoryCache {
@@ -79,13 +81,39 @@ public class InventoryCache {
     }
 
     public void handleContainerClick(ServerboundContainerClickPacket packet) {
-        // todo: fix
-//        mouseStack = packet.getCarriedItem();
+        CLIENT_LOG.info("{}", packet);
         var container = containers.get(packet.getContainerId());
         if (container == containers.defaultReturnValue()) {
             CACHE_LOG.debug("Attempted to click in unknown container {}", packet.getContainerId());
             return;
         }
+        var carriedHashStack = packet.getCarriedItem();
+        if (carriedHashStack == null) {
+            mouseStack = null;
+        } else {
+            if (mouseStack == null) {
+                var newMouseStackEntry = packet.getChangedSlots().int2ObjectEntrySet().stream()
+                    .filter(e -> isNull(e.getValue()))
+                    .findFirst();
+                if (newMouseStackEntry.isPresent()) {
+                    mouseStack = container.getItemStack(newMouseStackEntry.get().getIntKey());
+                } else {
+                    CLIENT_LOG.error("Unable to find new mouse item stack: {}\nContainer: {}", carriedHashStack, container.getContents());
+                }
+            } else {
+                if (mouseStack.getId() == carriedHashStack.id()) {
+                    carriedHashStack.addedComponents();
+                } else {
+                    CLIENT_LOG.error("Mouse stack id mismatch: {} != {}", mouseStack.getId(), carriedHashStack.id());
+                }
+            }
+            // find the matching itemstack in the inventory ???
+            var a = 0;
+
+        }
+        // todo: fix
+//        mouseStack = packet.getCarriedItem();
+
         // todo: fix
 //        packet.getChangedSlots().forEach(container::setItemStack);
     }

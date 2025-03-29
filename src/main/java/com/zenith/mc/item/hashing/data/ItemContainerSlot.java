@@ -23,17 +23,9 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item.hashing.data;
 
-import java.util.function.UnaryOperator;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
-    }
-
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
-    }
+public record ItemContainerSlot(int index, ItemStack item) {
 }

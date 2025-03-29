@@ -23,17 +23,13 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item.hashing.data;
 
-import java.util.function.UnaryOperator;
-
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
-    }
-
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
-    }
+// Ordered and named by Java ID
+public enum FireworkExplosionShape {
+    SMALL_BALL,
+    LARGE_BALL,
+    STAR,
+    CREEPER,
+    BURST
 }

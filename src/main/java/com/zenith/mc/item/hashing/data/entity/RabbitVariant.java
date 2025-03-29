@@ -23,17 +23,30 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item.hashing.data.entity;
 
-import java.util.function.UnaryOperator;
+// Named by Java ID
+public enum RabbitVariant {
+    BROWN(0),
+    WHITE(1),
+    BLACK(2),
+    WHITE_SPLOTCHED(3),
+    GOLD(4),
+    SALT(5),
+    EVIL(99);
 
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
+    private final int id;
+
+    RabbitVariant(int id) {
+        this.id = id;
     }
 
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
+    public static RabbitVariant fromId(int id) {
+        for (RabbitVariant variant : values()) {
+            if (variant.id == id) {
+                return variant;
+            }
+        }
+        throw new IllegalArgumentException("Unknown rabbit variant ID");
     }
 }

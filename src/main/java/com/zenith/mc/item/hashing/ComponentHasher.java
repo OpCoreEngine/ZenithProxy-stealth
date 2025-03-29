@@ -19,9 +19,9 @@ public interface ComponentHasher {
         }
     });
 
-    MinecraftHasher<NamedTextColor> NAMED_COLOR = MinecraftHasher.STRING.convert(NamedTextColor::toString);
+    MinecraftHasher<NamedTextColor> NAMED_COLOR = MinecraftHasher.STRING.cast(NamedTextColor::toString);
 
-    MinecraftHasher<TextColor> DIRECT_COLOR = MinecraftHasher.STRING.convert(TextColor::asHexString);
+    MinecraftHasher<TextColor> DIRECT_COLOR = MinecraftHasher.STRING.cast(TextColor::asHexString);
 
     MinecraftHasher<TextColor> COLOR = (value, encoder) -> {
         if (value instanceof NamedTextColor named) {
@@ -30,13 +30,13 @@ public interface ComponentHasher {
         return DIRECT_COLOR.hash(value, encoder);
     };
 
-    MinecraftHasher<TextDecoration.State> DECORATION_STATE = MinecraftHasher.BOOL.convert(state -> switch (state) {
+    MinecraftHasher<TextDecoration.State> DECORATION_STATE = MinecraftHasher.BOOL.cast(state -> switch (state) {
         case NOT_SET -> null; // Should never happen since we're using .optional() with NOT_SET as default value below
         case FALSE -> false;
         case TRUE -> true;
     });
 
-    MinecraftHasher<ClickEvent.Action> CLICK_EVENT_ACTION = MinecraftHasher.STRING.convert(ClickEvent.Action::toString);
+    MinecraftHasher<ClickEvent.Action> CLICK_EVENT_ACTION = MinecraftHasher.STRING.cast(ClickEvent.Action::toString);
 
     MinecraftHasher<ClickEvent> CLICK_EVENT = CLICK_EVENT_ACTION.dispatch("action", ClickEvent::action, action -> switch (action) {
         case OPEN_URL -> builder -> builder.accept("url", MinecraftHasher.STRING, ClickEvent::value);
@@ -46,7 +46,7 @@ public interface ComponentHasher {
         case COPY_TO_CLIPBOARD -> builder -> builder.accept("value", MinecraftHasher.STRING, ClickEvent::value);
     });
 
-    MinecraftHasher<HoverEvent.Action<?>> HOVER_EVENT_ACTION = MinecraftHasher.STRING.convert(HoverEvent.Action::toString);
+    MinecraftHasher<HoverEvent.Action<?>> HOVER_EVENT_ACTION = MinecraftHasher.STRING.cast(HoverEvent.Action::toString);
 
     MinecraftHasher<HoverEvent<?>> HOVER_EVENT = HOVER_EVENT_ACTION.dispatch("action", HoverEvent::action, action -> {
         if (action == HoverEvent.Action.SHOW_TEXT) {
@@ -75,9 +75,9 @@ public interface ComponentHasher {
         .optionalNullable("insertion", MinecraftHasher.STRING, Style::insertion)
         .optionalNullable("font", MinecraftHasher.KYORI_KEY, Style::font);
 
-    MinecraftHasher<TextComponent> SIMPLE_TEXT_COMPONENT = MinecraftHasher.STRING.convert(TextComponent::content);
+    MinecraftHasher<TextComponent> SIMPLE_TEXT_COMPONENT = MinecraftHasher.STRING.cast(TextComponent::content);
 
-    MinecraftHasher<TextComponent> FULL_TEXT_COMPONENT = component("text", builder -> builder
+    MinecraftHasher<TextComponent> FULL_TEXT_COMPONENT = component(builder -> builder
         .accept("text", MinecraftHasher.STRING, TextComponent::content));
 
     MinecraftHasher<TextComponent> TEXT_COMPONENT = MinecraftHasher.dispatch(component -> {
@@ -87,25 +87,25 @@ public interface ComponentHasher {
         return FULL_TEXT_COMPONENT;
     });
 
-    MinecraftHasher<TranslatableComponent> TRANSLATABLE_COMPONENT = component("translatable", builder -> builder
+    MinecraftHasher<TranslatableComponent> TRANSLATABLE_COMPONENT = component(builder -> builder
         .accept("translate", MinecraftHasher.STRING, TranslatableComponent::key)
         .optionalNullable("fallback", MinecraftHasher.STRING, TranslatableComponent::fallback)); // Arguments are probably not possible
 
-    MinecraftHasher<KeybindComponent> KEYBIND_COMPONENT = component("keybind", builder -> builder
+    MinecraftHasher<KeybindComponent> KEYBIND_COMPONENT = component(builder -> builder
         .accept("keybind", MinecraftHasher.STRING, component -> component.keybind()));
 
-    MinecraftHasher<ScoreComponent> SCORE_COMPONENT = component("score", builder -> builder
+    MinecraftHasher<ScoreComponent> SCORE_COMPONENT = component(builder -> builder
         .accept("name", MinecraftHasher.STRING, ScoreComponent::name)
         .accept("objective", MinecraftHasher.STRING, ScoreComponent::objective));
 
-    MinecraftHasher<SelectorComponent> SELECTOR_COMPONENT = component("selector", builder -> builder
+    MinecraftHasher<SelectorComponent> SELECTOR_COMPONENT = component(builder -> builder
         .accept("selector", MinecraftHasher.STRING, SelectorComponent::pattern)
         .optionalNullable("separator", COMPONENT, SelectorComponent::separator));
 
-    MinecraftHasher<NBTComponent<?, ?>> NBT_COMPONENT = component("nbt", builder -> builder
+    MinecraftHasher<NBTComponent<?, ?>> NBT_COMPONENT = component(builder -> builder
         .accept("nbt", MinecraftHasher.STRING, NBTComponent::nbtPath)
         .optional("interpret", MinecraftHasher.BOOL, NBTComponent::interpret, false)
-        .optionalNullable("separator", COMPONENT, NBTComponent::separator)); // TODO source, needs kyori update?
+        .optionalNullable("separator", COMPONENT, NBTComponent::separator)); // TODO source key, needs kyori update?
 
     MinecraftHasher<Component> ACTUAL_COMPONENT = (component, encoder) -> {
         if (component instanceof TextComponent text) {
@@ -124,9 +124,8 @@ public interface ComponentHasher {
         throw new IllegalStateException("Unimplemented component hasher: " + component);
     };
 
-    private static <T extends Component> MinecraftHasher<T> component(String type, MapBuilder<T> componentBuilder) {
+    private static <T extends Component> MinecraftHasher<T> component(MapBuilder<T> componentBuilder) {
         return MinecraftHasher.mapBuilder(builder -> builder
-            .acceptConstant("type", MinecraftHasher.STRING, type)
             .accept(componentBuilder)
             .accept(STYLE, Component::style)
             .optionalList("extra", COMPONENT, Component::children));

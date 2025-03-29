@@ -9,8 +9,14 @@ import com.zenith.mc.item.ItemRegistry;
 import com.zenith.mc.item.Rarity;
 import com.zenith.mc.potion.PotionRegistry;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.Effect;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.EquipmentSlot;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.GlobalPos;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.*;
 import org.geysermc.mcprotocollib.protocol.data.game.level.sound.BuiltinSound;
@@ -45,6 +51,14 @@ public class ComponentHasherTest {
         testHash(DataComponentTypes.DAMAGE, 459, 1211405277);
         testHash(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE, -982207288);
 
+        testHash(DataComponentTypes.CUSTOM_NAME, Component.text("simple component test!"), 950545066);
+        testHash(DataComponentTypes.CUSTOM_NAME, Component.translatable("a.translatable"), 1983484873);
+        testHash(DataComponentTypes.CUSTOM_NAME, Component.text("component with *style*")
+            .style(style -> style.color(NamedTextColor.RED).decorate(TextDecoration.ITALIC)), -886479206);
+        testHash(DataComponentTypes.CUSTOM_NAME, Component.text("component with more stuff")
+            .children(List.of(Component.translatable("a.translate.string", "fallback!")
+                                  .style(style -> style.color(TextColor.color(0x446688)).decorate(TextDecoration.BOLD)))), -1591253390);
+
         testHash(DataComponentTypes.ITEM_MODEL, "testing", -689946239);
 
         testHash(DataComponentTypes.RARITY, Rarity.COMMON.ordinal(), 75150990);
@@ -71,6 +85,11 @@ public class ComponentHasherTest {
         testHash(DataComponentTypes.FOOD, FoodProperties.builder().nutrition(5).saturationModifier(1.4F).canAlwaysEat(false).build(), 445786378);
         testHash(DataComponentTypes.FOOD, FoodProperties.builder().nutrition(3).saturationModifier(5.7F).canAlwaysEat(true).build(), 1917653498);
         testHash(DataComponentTypes.FOOD, FoodProperties.builder().nutrition(7).saturationModifier(0.15f).canAlwaysEat(false).build(), -184166204);
+
+        testHash(DataComponentTypes.CONSUMABLE, new Consumable(2.0F, Consumable.ItemUseAnimation.EAT,
+                                                                        BuiltinSound.ITEM_OMINOUS_BOTTLE_DISPOSE, true,
+                                                                        List.of(new ConsumeEffect.RemoveEffects(new HolderSet(new int[]{Effect.BAD_OMEN.ordinal(), Effect.REGENERATION.ordinal()})),
+                                                                                new ConsumeEffect.TeleportRandomly(3.0F))), 1742669333);
 
         testHash(DataComponentTypes.USE_REMAINDER, new ItemStack(ItemRegistry.MELON.id(), 52), -1279684916);
 
@@ -125,6 +144,15 @@ public class ComponentHasherTest {
 
         testHash(DataComponentTypes.MAP_DECORATIONS, MNBTIO.write(mapDecorations, false), -625782954);
 
+        ItemStack bundleStack1 = new ItemStack(ItemRegistry.PUMPKIN.id());
+        ItemStack bundleStack2 = new ItemStack(ItemRegistry.MELON.id(), 24);
+
+        DataComponents bundleStackComponents = new DataComponents(new HashMap<>());
+        bundleStackComponents.put(DataComponentTypes.CUSTOM_NAME, Component.text("magic potato!"));
+
+        ItemStack bundleStack3 = new ItemStack(ItemRegistry.POTATO.id(), 30, bundleStackComponents);
+        testHash(DataComponentTypes.BUNDLE_CONTENTS, List.of(bundleStack1, bundleStack2, bundleStack3), 1817891504);
+
         testHash(DataComponentTypes.POTION_CONTENTS, PotionContents.builder().potionId(PotionRegistry.FIRE_RESISTANCE.id()).customColor(-1).customEffects(List.of()).customName(null).build(), -772576502);
         testHash(DataComponentTypes.POTION_CONTENTS, PotionContents.builder()
                      .potionId(-1)
@@ -175,6 +203,13 @@ public class ComponentHasherTest {
                      .customName("testing")
                      .build(),
                  2007296036);
+
+        // TODO testing trim, instrument, trim material, jukebox playable requires registries
+
+        testHash(DataComponentTypes.LODESTONE_TRACKER,
+                 new LodestoneTracker(new GlobalPos(Key.key("overworld"), 5, 6, 7), true), 63561894);
+        testHash(DataComponentTypes.LODESTONE_TRACKER,
+                 new LodestoneTracker(null, false), 1595667667);
     }
 
     private static <T> void testHash(DataComponentType<T> component, T value, int expected) {

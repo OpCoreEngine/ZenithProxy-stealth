@@ -23,17 +23,15 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package com.zenith.mc.item.hashing;
+package com.zenith.mc.item.hashing.data.entity;
 
-import java.util.function.UnaryOperator;
-
-@FunctionalInterface
-public interface MapBuilder<T> extends UnaryOperator<MapHasher<T>> {
-    default <C> MapBuilder<C> cast() {
-        return builder -> builder.accept(this, casted -> (T) casted);
-    }
-
-    static <T> MapBuilder<T> empty() {
-        return builder -> builder;
-    }
+// Ordered and named by Java ID
+public enum HorseVariant {
+    WHITE,
+    CREAMY,
+    CHESTNUT,
+    BROWN,
+    BLACK,
+    GRAY,
+    DARK_BROWN
 }
