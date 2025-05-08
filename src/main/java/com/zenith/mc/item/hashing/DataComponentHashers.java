@@ -26,6 +26,7 @@
 package com.zenith.mc.item.hashing;
 
 import com.google.common.hash.HashCode;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.*;
@@ -34,8 +35,11 @@ import org.geysermc.mcprotocollib.protocol.data.game.level.sound.BuiltinSound;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.zenith.Globals.DEFAULT_LOG;
+
 @SuppressWarnings("UnstableApiUsage")
 public class DataComponentHashers {
+    private static final Set<DataComponentType<?>> NOT_HASHED = ReferenceOpenHashSet.of(DataComponentTypes.CREATIVE_SLOT_LOCK, DataComponentTypes.MAP_POST_PROCESSING);
     private static final Map<DataComponentType<?>, MinecraftHasher<?>> hashers = new HashMap<>();
 
     static {
@@ -239,20 +243,21 @@ public class DataComponentHashers {
         hashers.put(component, hasher);
     }
 
-    public static <T> MinecraftHasher<T> hasherOrEmpty(DataComponentType<T> component) {
+    public static <T> MinecraftHasher<T> hasher(DataComponentType<T> component) {
         MinecraftHasher<T> hasher = (MinecraftHasher<T>) hashers.get(component);
         if (hasher == null) {
-            return MinecraftHasher.UNIT.cast(value -> Unit.INSTANCE);
+            throw new IllegalStateException("Unregistered hasher for component " + component + "!");
         }
         return hasher;
     }
 
     public static <T> HashCode hash(DataComponentType<T> component, T value) {
-        MinecraftHasher<T> hasher = (MinecraftHasher<T>) hashers.get(component);
-        if (hasher == null) {
-            throw new IllegalStateException("Unregistered hasher for component " + component + "!");
+        try {
+            return hasher(component).hash(value, new MinecraftHashEncoder());
+        } catch (Exception exception) {
+            DEFAULT_LOG.error("Failed to hash item data component " + component.getKey() + " with value " + value + "!");
+            throw exception;
         }
-        return hasher.hash(value, new MinecraftHashEncoder());
     }
 
     public static HashedStack hashStack(ItemStack stack) {
@@ -268,7 +273,9 @@ public class DataComponentHashers {
         Map<DataComponentType<?>, Integer> hashedAdditions = new HashMap<>();
         Set<DataComponentType<?>> removals = new HashSet<>();
         for (Map.Entry<DataComponentType<?>, DataComponent<?, ?>> component : components.entrySet()) {
-            if (component.getValue().getValue() == null) {
+            if (NOT_HASHED.contains(component.getKey())) {
+                DEFAULT_LOG.debug("Not hashing component " + component.getKey() + " on stack " + stack);
+            } else if (component.getValue().getValue() == null) {
                 removals.add(component.getKey());
             } else {
                 hashedAdditions.put(component.getKey(), hash((DataComponentType) component.getKey(), component.getValue().getValue()).asInt());
