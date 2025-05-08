@@ -167,6 +167,11 @@ public record CoordOffset(
 
     // 2b2t seems to remove most tags already but just to be safe
     public ItemStack sanitizeItemStack(final ItemStack itemStack) {
+        // todo: changing the itemstack has consequences for the stack hash
+        //  fixing that would require a separate inventory cache state for each obf player session
+        //  for now we just return the itemstack as-is and rely on 2b2t to remove dangerous data components
+        if (true) return itemStack;
+
         if (itemStack == null) return null;
         if (itemStack.getId() == ItemRegistry.COMPASS.id()
             || itemStack.getId() == ItemRegistry.RECOVERY_COMPASS.id()
