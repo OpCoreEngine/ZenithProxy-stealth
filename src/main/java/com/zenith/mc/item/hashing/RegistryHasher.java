@@ -54,7 +54,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static com.zenith.Shared.CLIENT_LOG;
+import static com.zenith.Globals.CLIENT_LOG;
 
 /**
  * {@link RegistryHasher}s are hashers that hash a network, integer ID to an identifier. {@link RegistryHasher}s can be created using static utility methods in this class, and all registry hashers should be kept in here.

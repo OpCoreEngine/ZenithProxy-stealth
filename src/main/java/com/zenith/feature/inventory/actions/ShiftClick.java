@@ -1,6 +1,5 @@
 package com.zenith.feature.inventory.actions;
 
-import com.zenith.cache.data.inventory.Container;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -8,8 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftPacket;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ShiftClickItemAction;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
+import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
+import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE;
 import static com.zenith.Globals.CLIENT_LOG;
@@ -43,7 +43,8 @@ public class ShiftClick implements InventoryAction {
         //  may cause anticheat issues as our changed slots are empty
         //  and may also cause cache issues as we are relying on the server to send us back updated slots
 
-        Int2ObjectMap<ItemStack> changedSlots = new Int2ObjectArrayMap<>();
+        // todo: fix for hashed stacks
+        final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
 
         if (action == ShiftClickItemAction.LEFT_CLICK) {
             if (container.getContainerId() == 0) {
@@ -67,7 +68,8 @@ public class ShiftClick implements InventoryAction {
             slotId,
             actionType,
             action,
-            Container.EMPTY_STACK,
+            null,
+//            Container.EMPTY_STACK,
             changedSlots
         );
     }

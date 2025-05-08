@@ -1,6 +1,5 @@
 package com.zenith.feature.inventory.actions;
 
-import com.zenith.cache.data.inventory.Container;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -8,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftPacket;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.DropItemAction;
+import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
+import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE;
 import static com.zenith.Globals.CLIENT_LOG;
@@ -39,29 +40,31 @@ public class DropItem implements InventoryAction {
             CLIENT_LOG.debug("[{}, {}, {}] Can't drop empty click stack", slotId, actionType, dropItemAction);
             return null; // can't drop if clickStack is empty
         }
-        final Int2ObjectMap<ItemStack> changedSlots = new Int2ObjectArrayMap<>();
+        // todo: fix for hashed stacks
+        final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
 
-        switch (dropItemAction) {
-            case DROP_FROM_SELECTED -> // drop 1 item from the selected slot
-                changedSlots.put(
-                    slotId,
-                    clickStack.getAmount() == 1
-                        ? Container.EMPTY_STACK
-                        : new ItemStack(clickStack.getId(), clickStack.getAmount() - 1, clickStack.getDataComponents()));
-            case DROP_SELECTED_STACK -> // drop the entire stack from the selected slot
-                changedSlots.put(slotId, Container.EMPTY_STACK);
-            default -> {
-                CLIENT_LOG.debug("[{}, {}, {}] Unhandled drop item action", slotId, actionType, dropItemAction);
-                return null;
-            }
-        }
+//        switch (dropItemAction) {
+//            case DROP_FROM_SELECTED -> // drop 1 item from the selected slot
+//                changedSlots.put(
+//                    slotId,
+//                    clickStack.getAmount() == 1
+//                        ? Container.EMPTY_STACK
+//                        : new ItemStack(clickStack.getId(), clickStack.getAmount() - 1, clickStack.getDataComponents()));
+//            case DROP_SELECTED_STACK -> // drop the entire stack from the selected slot
+//                changedSlots.put(slotId, Container.EMPTY_STACK);
+//            default -> {
+//                CLIENT_LOG.debug("[{}, {}, {}] Unhandled drop item action", slotId, actionType, dropItemAction);
+//                return null;
+//            }
+//        }
         return new ServerboundContainerClickPacket(
             containerId,
             CACHE.getPlayerCache().getActionId().incrementAndGet(),
             slotId,
             actionType,
             dropItemAction,
-            Container.EMPTY_STACK,
+            null,
+//            Container.EMPTY_STACK,
             changedSlots
         );
     }

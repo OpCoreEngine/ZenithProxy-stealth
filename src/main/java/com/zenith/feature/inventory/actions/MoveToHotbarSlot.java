@@ -1,6 +1,5 @@
 package com.zenith.feature.inventory.actions;
 
-import com.zenith.cache.data.inventory.Container;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -9,8 +8,10 @@ import org.geysermc.mcprotocollib.protocol.codec.MinecraftPacket;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.EquipmentSlot;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.MoveToHotbarAction;
+import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
+import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE;
 import static com.zenith.Globals.CLIENT_LOG;
@@ -40,7 +41,8 @@ public class MoveToHotbarSlot implements InventoryAction {
             CLIENT_LOG.debug("[{}, {}, {}] Can't swap empty stack", slotId, actionType, moveToHotbarAction);
             return null; // can't swap if clickStack is empty
         }
-        Int2ObjectMap<ItemStack> changedSlots = new Int2ObjectArrayMap<>();
+        // todo: fix for hashed stacks
+        final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
         int hotBarSlot = -1;
         boolean playerInv = containerId == 0;
         int hotbarOffset = playerInv ? 36 : container.getSize() - 9;
@@ -58,12 +60,12 @@ public class MoveToHotbarSlot implements InventoryAction {
         }
         if (hotBarSlot != -1) {
             final ItemStack swapStack = container.getItemStack(hotBarSlot);
-            changedSlots.put(hotBarSlot, clickStack);
-            changedSlots.put(slotId, swapStack);
+//            changedSlots.put(hotBarSlot, clickStack);
+//            changedSlots.put(slotId, swapStack);
         } else {
             // there is no offhand slot id in the container, so only one slot is set as changed in the packet
             var offhandStack = CACHE.getPlayerCache().getEquipment(EquipmentSlot.OFF_HAND);
-            changedSlots.put(slotId, offhandStack);
+//            changedSlots.put(slotId, offhandStack);
         }
 
 
@@ -73,7 +75,8 @@ public class MoveToHotbarSlot implements InventoryAction {
             slotId,
             actionType,
             moveToHotbarAction,
-            Container.EMPTY_STACK,
+            null,
+//            Container.EMPTY_STACK,
             changedSlots
         );
     }

@@ -46,7 +46,9 @@ public class DropMouseStack implements InventoryAction {
             -999,
             actionType,
             clickItemAction,
-            predictedMouseStack,
+            null,
+            // todo: fix for hashed stacks
+//            predictedMouseStack,
             Int2ObjectMaps.emptyMap()
         );
     }

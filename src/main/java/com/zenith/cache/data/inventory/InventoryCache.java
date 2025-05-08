@@ -5,15 +5,15 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Data;
 import net.kyori.adventure.text.Component;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.MoveToHotbarAction;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCreativeModeSlotPacket;
 import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE_LOG;
+import static com.zenith.Globals.CLIENT_LOG;
+import static java.util.Objects.isNull;
 
 @Data
 public class InventoryCache {
