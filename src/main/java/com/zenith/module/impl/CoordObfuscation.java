@@ -38,6 +38,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRespawnPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundStartConfigurationPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundTestInstanceBlockStatus;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerLookAtPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
@@ -47,9 +48,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.C
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundSetPlayerInventoryPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundPickItemFromBlockPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundAcceptTeleportationPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundSignUpdatePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 
 import java.security.SecureRandom;
@@ -131,6 +130,8 @@ public class CoordObfuscation extends Module {
                 .inbound(ServerboundUseItemPacket.class, new COUseItemHandler())
                 .inbound(ServerboundUseItemOnPacket.class, new COUseItemOnHandler())
                 .inbound(ServerboundPickItemFromBlockPacket.class, new COPickItemFromBlockHandler())
+                .inbound(ServerboundSetTestBlockPacket.class, (p, s) -> null)
+                .inbound(ServerboundTestInstanceBlockActionPacket.class, (p, s) -> null)
                 .outbound(ClientboundStartConfigurationPacket.class, new COCStartConfigurationHandler())
                 .outbound(ClientboundAddEntityPacket.class, new COAddEntityHandler())
                 .outbound(ClientboundBlockDestructionPacket.class, new COBlockDestructionHandler())
@@ -169,6 +170,7 @@ public class CoordObfuscation extends Module {
                 .outbound(ClientboundMoveMinecartPacket.class, new COMoveMinecartHandler())
                 .outbound(ClientboundSetCursorItemPacket.class, new COSetCursorItemHandler())
                 .outbound(ClientboundSetPlayerInventoryPacket.class, new COSetPlayerInventoryHandler())
+                .outbound(ClientboundTestInstanceBlockStatus.class, (p, s) -> null)
                 .build())
             .build();
     }
