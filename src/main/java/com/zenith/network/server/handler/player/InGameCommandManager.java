@@ -1,14 +1,14 @@
 package com.zenith.network.server.handler.player;
 
-import com.zenith.command.brigadier.CommandContext;
-import com.zenith.command.brigadier.CommandSource;
-import com.zenith.command.util.CommandOutputHelper;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandOutputHelper;
+import com.zenith.command.api.CommandSources;
 import com.zenith.network.server.ServerSession;
 import com.zenith.util.ComponentSerializer;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.jspecify.annotations.NonNull;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 
 public class InGameCommandManager {
 
@@ -16,7 +16,7 @@ public class InGameCommandManager {
     // true = command was handled
     // false = command was not handled
     public boolean handleInGameCommand(final String message, final @NonNull ServerSession session, final boolean printUnhandled) {
-        TERMINAL_LOG.info("{} executed in-game command: {}", session.getProfileCache().getProfile().getName(), message);
+        TERMINAL_LOG.info("{} executed in-game command: {}", session.getName(), message);
         final String command = message.split(" ")[0]; // first word is the command
         if (command.equals("help") && CONFIG.inGameCommands.enable && !CONFIG.inGameCommands.slashCommands) {
             session.sendAsync(new ClientboundSystemChatPacket(
@@ -41,7 +41,7 @@ public class InGameCommandManager {
             COMMAND.execute(commandContext, parse);
             var embed = commandContext.getEmbed();
             CommandOutputHelper.logEmbedOutputToInGame(embed, session);
-            CommandOutputHelper.logMultiLineOutputToInGame(commandContext, session);
+            CommandOutputHelper.logMultiLineOutputToInGame(commandContext.getMultiLineOutput(), session);
             if (!commandContext.isNoOutput() && !embed.isTitlePresent() && commandContext.getMultiLineOutput().isEmpty()) {
                 if (printUnhandled) {
                     session.sendAsyncAlert("<red>Unknown command!");
@@ -50,19 +50,19 @@ public class InGameCommandManager {
             }
             if (CONFIG.inGameCommands.logToDiscord && DISCORD.isRunning() && !commandContext.isSensitiveInput()) {
                 // will also log to terminal
-                CommandOutputHelper.logInputToDiscord(command, CommandSource.IN_GAME_PLAYER);
+                CommandOutputHelper.logInputToDiscord(command, CommandSources.PLAYER);
                 CommandOutputHelper.logEmbedOutputToDiscord(embed);
-                CommandOutputHelper.logMultiLineOutputToDiscord(commandContext);
+                CommandOutputHelper.logMultiLineOutputToDiscord(commandContext.getMultiLineOutput());
             } else {
                 CommandOutputHelper.logEmbedOutputToTerminal(embed);
-                CommandOutputHelper.logMultiLineOutputToTerminal(commandContext);
+                CommandOutputHelper.logMultiLineOutputToTerminal(commandContext.getMultiLineOutput());
             }
         });
         return true;
     }
 
     public void handleInGameCommandSpectator(final String message, final @NonNull ServerSession session, final boolean printUnhandled) {
-        TERMINAL_LOG.info("{} executed in-game spectator command: {}", session.getProfileCache().getProfile().getName(), message);
+        TERMINAL_LOG.info("{} executed in-game spectator command: {}", session.getName(), message);
         final CommandContext commandContext = CommandContext.createSpectatorContext(message, session);
         var parse = COMMAND.parse(commandContext);
         if (COMMAND.hasCommandNode(parse)) {
@@ -70,7 +70,7 @@ public class InGameCommandManager {
         }
         var embed = commandContext.getEmbed();
         CommandOutputHelper.logEmbedOutputToInGame(embed, session);
-        CommandOutputHelper.logMultiLineOutputToInGame(commandContext, session);
+        CommandOutputHelper.logMultiLineOutputToInGame(commandContext.getMultiLineOutput(), session);
         if (!commandContext.isNoOutput() && !embed.isTitlePresent() && commandContext.getMultiLineOutput().isEmpty()) {
             if (printUnhandled) {
                 session.sendAsyncAlert("<red>Unknown command!");
@@ -79,12 +79,12 @@ public class InGameCommandManager {
         }
         if (CONFIG.inGameCommands.logToDiscord && DISCORD.isRunning() && !commandContext.isSensitiveInput()) {
             // will also log to terminal
-            CommandOutputHelper.logInputToDiscord(message, CommandSource.SPECTATOR);
+            CommandOutputHelper.logInputToDiscord(message, CommandSources.SPECTATOR);
             CommandOutputHelper.logEmbedOutputToDiscord(embed);
-            CommandOutputHelper.logMultiLineOutputToDiscord(commandContext);
+            CommandOutputHelper.logMultiLineOutputToDiscord(commandContext.getMultiLineOutput());
         } else {
             CommandOutputHelper.logEmbedOutputToTerminal(embed);
-            CommandOutputHelper.logMultiLineOutputToTerminal(commandContext);
+            CommandOutputHelper.logMultiLineOutputToTerminal(commandContext.getMultiLineOutput());
         }
     }
 }

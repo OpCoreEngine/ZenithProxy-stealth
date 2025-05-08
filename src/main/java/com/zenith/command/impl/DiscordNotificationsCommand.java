@@ -1,17 +1,17 @@
 package com.zenith.command.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
 import com.zenith.discord.Embed;
 import com.zenith.util.MentionUtil;
 
 import java.util.regex.Pattern;
 
-import static com.zenith.Shared.CONFIG;
-import static com.zenith.Shared.DISCORD_LOG;
+import static com.zenith.Globals.CONFIG;
+import static com.zenith.Globals.DISCORD_LOG;
 import static com.zenith.command.brigadier.CustomStringArgumentType.getString;
 import static com.zenith.command.brigadier.CustomStringArgumentType.wordWithChars;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
@@ -42,7 +42,8 @@ public class DiscordNotificationsCommand extends Command {
                 "clientDisconnect mention on/off",
                 "spectatorConnect mention on/off",
                 "spectatorDisconnect mention on/off",
-                "nonWhitelistedConnect mention on/off"
+                "nonWhitelistedConnect mention on/off",
+                "mcVersionMismatchWarning on/off"
             )
             .aliases(
                 "alerts",
@@ -150,11 +151,17 @@ public class DiscordNotificationsCommand extends Command {
                 c.getSource().getEmbed()
                     .title("Non Whitelisted Connect Mention " + toggleStrCaps(CONFIG.discord.mentionOnNonWhitelistedClientConnected));
                 return OK;
-            }))));
+            }))))
+            .then(literal("mcVersionMismatchWarning").then(argument("toggle", toggle()).executes(c -> {
+                CONFIG.discord.mcVersionMismatchWarning = getToggle(c, "toggle");
+                c.getSource().getEmbed()
+                    .title("MC Version Mismatch Warning " + toggleStrCaps(CONFIG.discord.mcVersionMismatchWarning));
+                return OK;
+            })));
     }
 
     @Override
-    public void postPopulate(final Embed builder) {
+    public void defaultEmbed(final Embed builder) {
         builder
             .primaryColor()
             .addField("Notification Role", CONFIG.discord.notificationMentionRoleId.isEmpty()
@@ -171,7 +178,8 @@ public class DiscordNotificationsCommand extends Command {
             .addField("Client Disconnect Mention", toggleStr(CONFIG.discord.mentionOnClientDisconnected), false)
             .addField("Spectator Connect Mention", toggleStr(CONFIG.discord.mentionOnSpectatorConnected), false)
             .addField("Spectator Disconnect Mention", toggleStr(CONFIG.discord.mentionOnSpectatorDisconnected), false)
-            .addField("Non Whitelisted Connect Mention", toggleStr(CONFIG.discord.mentionOnNonWhitelistedClientConnected), false);
+            .addField("Non Whitelisted Connect Mention", toggleStr(CONFIG.discord.mentionOnNonWhitelistedClientConnected), false)
+            .addField("MC Version Mismatch Warning", toggleStr(CONFIG.discord.mcVersionMismatchWarning), false);
     }
 
     private String getRoleMention(final String roleId) {

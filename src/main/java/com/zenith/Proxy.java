@@ -2,9 +2,15 @@ package com.zenith;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.zenith.cache.CacheResetType;
+import com.zenith.discord.ChatRelayEventListener;
 import com.zenith.discord.Embed;
 import com.zenith.discord.NotificationEventListener;
-import com.zenith.event.proxy.*;
+import com.zenith.event.client.*;
+import com.zenith.event.message.PrivateMessageSendEvent;
+import com.zenith.event.queue.QueueCompleteEvent;
+import com.zenith.event.queue.QueuePositionUpdateEvent;
+import com.zenith.event.queue.QueueSkipEvent;
+import com.zenith.event.queue.QueueStartEvent;
 import com.zenith.feature.api.crafthead.CraftheadApi;
 import com.zenith.feature.api.mcsrvstatus.MCSrvStatusApi;
 import com.zenith.feature.api.minotar.MinotarApi;
@@ -18,12 +24,10 @@ import com.zenith.network.client.ClientSession;
 import com.zenith.network.server.LanBroadcaster;
 import com.zenith.network.server.ProxyServerListener;
 import com.zenith.network.server.ServerSession;
-import com.zenith.util.ComponentSerializer;
-import com.zenith.util.FastArrayList;
 import com.zenith.util.Wait;
+import com.zenith.util.struct.FastArrayList;
 import com.zenith.via.ZenithClientChannelInitializer;
 import com.zenith.via.ZenithServerChannelInitializer;
-import io.netty.util.ResourceLeakDetector;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -63,9 +67,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static com.github.rfresh2.EventConsumer.of;
-import static com.zenith.Shared.*;
-import static com.zenith.util.Config.Authentication.AccountType.MSA;
-import static com.zenith.util.Config.Authentication.AccountType.OFFLINE;
+import static com.zenith.Globals.*;
+import static com.zenith.util.DisconnectMessages.*;
+import static com.zenith.util.config.Config.Authentication.AccountType.MSA;
+import static com.zenith.util.config.Config.Authentication.AccountType.OFFLINE;
 import static java.util.Objects.nonNull;
 
 
@@ -94,25 +99,32 @@ public class Proxy {
         Locale.setDefault(Locale.ENGLISH);
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
-        if (System.getProperty("io.netty.leakDetection.level") == null)
-            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+        if (System.getProperty("io.netty.allocator.type") == null)
+            // new adaptive alloc in netty 4.2 is causing out of memory errors with graalvm and 200M heap size
+            // there could be some netty config props that could help
+            // but for now revert back to pooled type used in netty 4.1
+            System.setProperty("io.netty.allocator.type", "pooled");
         if (System.getProperty("reactor.schedulers.defaultPoolSize") == null)
             System.setProperty("reactor.schedulers.defaultPoolSize", "1");
-        if (System.getProperty("reactor.schedulers.defaultBoundedElasticOnVirtualThreads") == null)
-            System.setProperty("reactor.schedulers.defaultBoundedElasticOnVirtualThreads", "true");
+        if (System.getProperty("io.netty.allocator.numHeapArenas") == null)
+            System.setProperty("io.netty.allocator.numHeapArenas", "2");
+        if (System.getProperty("io.netty.allocator.numDirectArenas") == null)
+            System.setProperty("io.netty.allocator.numDirectArenas", "2");
+        if (System.getProperty("io.netty.leakDetection.level") == null)
+            System.setProperty("io.netty.leakDetection.level", "disabled");
         instance.start();
     }
 
     public void initEventHandlers() {
         EVENT_BUS.subscribe(
             this,
-            of(DisconnectEvent.class, this::handleDisconnectEvent),
-            of(ConnectEvent.class, this::handleConnectEvent),
-            of(StartQueueEvent.class, this::handleStartQueueEvent),
+            of(ClientDisconnectEvent.class, this::handleDisconnectEvent),
+            of(ClientConnectEvent.class, this::handleConnectEvent),
+            of(QueueStartEvent.class, this::handleStartQueueEvent),
             of(QueuePositionUpdateEvent.class, this::handleQueuePositionUpdateEvent),
             of(QueueCompleteEvent.class, this::handleQueueCompleteEvent),
             of(QueueSkipEvent.class, this::handleQueueSkipEvent),
-            of(PlayerOnlineEvent.class, this::handlePlayerOnlineEvent),
+            of(ClientOnlineEvent.class, this::handlePlayerOnlineEvent),
             of(PrioStatusEvent.class, this::handlePrioStatusEvent),
             of(PrivateMessageSendEvent.class, this::handlePrivateMessageSendEvent)
         );
@@ -120,7 +132,7 @@ public class Proxy {
 
     public void start() {
         DEFAULT_LOG.info("Starting ZenithProxy-{}", LAUNCH_CONFIG.version);
-        @Nullable String exeReleaseVersion = getExecutableReleaseVersion();
+        var exeReleaseVersion = getExecutableReleaseVersion();
         if (exeReleaseVersion == null) {
             DEFAULT_LOG.warn("Detected unofficial ZenithProxy development build!");
         } else if (!LAUNCH_CONFIG.version.split("\\+")[0].equals(exeReleaseVersion.split("\\+")[0])) {
@@ -140,17 +152,17 @@ public class Proxy {
                 DEFAULT_LOG.info("Started Databases");
             }
             if (CONFIG.discord.enable) {
-                boolean err = false;
                 try {
                     DISCORD.start();
+                    DISCORD_LOG.info("Started Discord Bot");
                 } catch (final Throwable e) {
-                    err = true;
                     DISCORD_LOG.error("Failed starting discord bot: {}", e.getMessage());
                     DISCORD_LOG.debug("Failed starting discord bot", e);
                 }
-                if (!err) DISCORD_LOG.info("Started Discord Bot");
             }
             NotificationEventListener.INSTANCE.subscribeEvents();
+            ChatRelayEventListener.INSTANCE.subscribeEvents();
+            if (CONFIG.plugins.enabled) PLUGIN_MANAGER.initialize();
             Queue.start();
             saveConfigAsync();
             MinecraftConstants.CHUNK_SECTION_COUNT_PROVIDER = CACHE.getSectionCountProvider();
@@ -194,7 +206,7 @@ public class Proxy {
                             """
                             You are currently using a ZenithProxy prerelease
                             
-                            Prereleases include experiments that may contain bugs and are not always updated with fixes             
+                            Prereleases include experiments that may contain bugs and are not always updated with fixes
                             
                             Switch to a stable release with the `channel` command
                             """));
@@ -309,7 +321,7 @@ public class Proxy {
         DEFAULT_LOG.info("Shutting Down...");
         try {
             CompletableFuture.runAsync(() -> {
-                if (nonNull(this.client)) this.client.disconnect(MinecraftConstants.SERVER_CLOSING_MESSAGE);
+                if (nonNull(this.client)) this.client.disconnect(SERVER_CLOSING_MESSAGE);
                 MODULE.get(AutoReconnect.class).cancelAutoReconnect();
                 stopServer();
                 tcpManager.close();
@@ -379,16 +391,16 @@ public class Proxy {
         this.connectTime = Instant.now();
         final MinecraftProtocol minecraftProtocol;
         try {
-            EVENT_BUS.postAsync(new StartConnectEvent());
+            EVENT_BUS.postAsync(new ClientStartConnectEvent());
             minecraftProtocol = this.logIn();
         } catch (final Exception e) {
-            EVENT_BUS.post(new ProxyLoginFailedEvent());
+            EVENT_BUS.post(new ClientLoginFailedEvent());
             var connections = getActiveConnections().getArray();
             for (int i = 0; i < connections.length; i++) {
                 var connection = connections[i];
                 connection.disconnect("Login failed");
             }
-            EXECUTOR.schedule(() -> EVENT_BUS.post(new DisconnectEvent(LOGIN_FAILED)), 1L, TimeUnit.SECONDS);
+            EXECUTOR.schedule(() -> EVENT_BUS.post(new ClientDisconnectEvent(LOGIN_FAILED)), 1L, TimeUnit.SECONDS);
             return;
         }
         CLIENT_LOG.info("Connecting to {}:{}...", address, port);
@@ -440,7 +452,6 @@ public class Proxy {
             this.lanBroadcaster = new LanBroadcaster();
             lanBroadcaster.start();
         }
-        this.server.setGlobalFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true);
         this.server.addListener(new ProxyServerListener());
         this.server.bind(false);
     }
@@ -461,7 +472,7 @@ public class Proxy {
         for (int tries = 0; tries < 3; tries++) {
             minecraftProtocol = retrieveLoginTaskResult(loginTask());
             if (minecraftProtocol != null || !loggingIn.get()) break;
-            AUTH_LOG.warn("Failed login attempt " + (tries + 1));
+            AUTH_LOG.warn("Failed login attempt {}", tries + 1);
             Wait.wait((int) (3 + (Math.random() * 7.0)));
         }
         if (!loggingIn.compareAndSet(true, false)) throw new RuntimeException("Login Cancelled");
@@ -514,15 +525,24 @@ public class Proxy {
         }
     }
 
-    public URL getAvatarURL(UUID uuid) {
-        return getAvatarURL(uuid.toString().replace("-", ""));
+    public URL getPlayerHeadURL(UUID uuid) {
+        return getPlayerHeadURL(uuid.toString().replace("-", ""));
     }
 
-    public URL getAvatarURL(String playerName) {
+    public URL getPlayerHeadURL(String playerName) {
         try {
             return URI.create(String.format("https://minotar.net/helm/%s/64", playerName)).toURL();
         } catch (MalformedURLException e) {
-            SERVER_LOG.error("Failed to get avatar URL for player: {}", playerName, e);
+            SERVER_LOG.error("Failed to get player head URL for: {}", playerName, e);
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public URL getPlayerBodyURL(UUID uuid) {
+        try {
+            return URI.create(String.format("https://api.mineatar.io/body/full/%s", uuid)).toURL();
+        } catch (MalformedURLException e) {
+            SERVER_LOG.error("Failed to get player body URL for: {}", uuid, e);
             throw new UncheckedIOException(e);
         }
     }
@@ -651,7 +671,7 @@ public class Proxy {
         return Queue.getEtaStringFromSeconds(getOnlineTimeSecondsWithQueueSkip());
     }
 
-    public void handleDisconnectEvent(DisconnectEvent event) {
+    public void handleDisconnectEvent(ClientDisconnectEvent event) {
         CACHE.reset(CacheResetType.FULL);
         this.disconnectTime = Instant.now();
         this.prevOnlineSeconds = inQueue
@@ -663,12 +683,12 @@ public class Proxy {
         TPS.reset();
     }
 
-    public void handleConnectEvent(ConnectEvent event) {
+    public void handleConnectEvent(ClientConnectEvent event) {
         this.connectTime = Instant.now();
         if (isOn2b2t()) EXECUTOR.execute(Queue::updateQueueStatusNow);
     }
 
-    public void handleStartQueueEvent(StartQueueEvent event) {
+    public void handleStartQueueEvent(QueueStartEvent event) {
         this.inQueue = true;
         this.queuePosition = 0;
         if (event.wasOnline()) this.connectTime = Instant.now();
@@ -687,7 +707,7 @@ public class Proxy {
         this.didQueueSkip = true;
     }
 
-    public void handlePlayerOnlineEvent(PlayerOnlineEvent event) {
+    public void handlePlayerOnlineEvent(ClientOnlineEvent event) {
         if (this.isPrio.isEmpty())
             // assume we are prio if we skipped queuing
             EVENT_BUS.postAsync(new PrioStatusEvent(true));
@@ -711,7 +731,7 @@ public class Proxy {
 
     public void handlePrivateMessageSendEvent(PrivateMessageSendEvent event) {
         if (!isConnected()) return;
-        CHAT_LOG.info("{}", ComponentSerializer.serializeJson(event.getContents()));
+        CHAT_LOG.info(event.getContents());
         var connections = getActiveConnections().getArray();
         for (int i = 0; i < connections.length; i++) {
             var connection = connections[i];

@@ -2,24 +2,21 @@ package com.zenith.command.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.zenith.Proxy;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
 import com.zenith.feature.api.vcapi.VcApi;
 import com.zenith.feature.api.vcapi.model.StatsResponse;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import static com.zenith.command.brigadier.CustomStringArgumentType.wordWithChars;
 import static com.zenith.util.math.MathHelper.formatDurationLong;
 
 public class StatsCommand extends Command {
-    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     @Override
     public CommandUsage commandUsage() {
         return CommandUsage.builder()
@@ -65,7 +62,7 @@ public class StatsCommand extends Command {
                     .addField("Chats", playerStats.chatsCount(), true)
                     .addField("Priority Queue", playerStats.prio() ? "Yes (probably)" : "No (probably not)", true)
                     .addField("\u200B", "\u200B", true)
-                    .thumbnail(Proxy.getInstance().getAvatarURL(playerName).toString());
+                    .thumbnail(Proxy.getInstance().getPlayerHeadURL(playerName).toString());
                 return OK;
             }));
     }

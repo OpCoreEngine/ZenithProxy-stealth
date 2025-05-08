@@ -59,21 +59,21 @@ This project is also used for the [2b2t.vc API](https://api.2b2t.vc) and [Discor
 
 # Features
 
-* High performance and efficiency on minimal hardware, <300MB RAM per java instance or <150MB on linux.
+* High performance and efficiency on minimal hardware, <300MB RAM per java instance or <200MB on linux.
 * Integrated ViaVersion
   * Can connect to (almost) any MC server and players can connect with (almost) any MC client
 * Secure Whitelist system - share MC accounts without sharing passwords
-* Extensive Discord Bot integration for management and monitoring
-    * Chat relay
-    * Customizable pings, alerts, and notifications. e.g. Player in visual range alerts
-* Command System - Discord, In-game, and Terminal
-  * 25+ commands and modules to configure every feature
+* Discord Bot for management and notifications
+    * Chat relay/bridge
+    * Customizable pings and alerts. e.g. Player in visual range alerts
 * Spectator mode
-  * Multiple players can connect to the proxy and spectate the player
-* Advanced AntiAFK with full player movement simulation
-* Integrated ReplayMod Recording
-* Modules including AutoEat, AutoDisconnect, AutoReconnect, AutoRespawn, AutoTotem, KillAura, Spammer, AutoReply
-* Many, many, more features.
+  * Multiple players can connect and spectate the player
+* Coordinate obfuscation - let players you don't trust visit your base safely
+* Baritone pathfinding and movement
+* ReplayMod recordings
+* 25+ modules including AutoEat, AutoDisconnect, AutoReconnect, AutoRespawn, AutoTotem, KillAura, Spammer, AutoReply
+* Java plugins that add more modules created by the community
+* Many, many, more features
 
 # Getting Started
 
@@ -187,11 +187,11 @@ See the [Linux Guide](https://github.com/rfresh2/ZenithProxy/wiki/Linux-Guide) f
 
 Current limits are documented in [a discord channel](https://discord.com/channels/1127460556710883391/1200685719073599488)
 
-### Development
+## Development
 
-I highly recommend using Intellij for building and running local development instances.
+I highly recommend using [Intellij](https://www.jetbrains.com/idea/) for building and running local development instances.
 
-Gradle will automatically install the required Java version for compiling (currently Java 23)
+Gradle will automatically install the required Java version for compiling (currently Java 24)
 
 Most useful gradle tasks:
 * `run` - Builds and runs a local dev instance
@@ -202,3 +202,4 @@ Most useful gradle tasks:
 
 * [Pork2b2tBot Contributors](https://github.com/PorkStudios/Pork2b2tBot/graphs/contributors)
 * [MCProtocolLib Contributors](https://github.com/GeyserMC/MCProtocolLib/graphs/contributors)
+* [Baritone Contributors](https://github.com/cabaletta/Baritone/graphs/contributors)

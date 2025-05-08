@@ -20,23 +20,27 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 
 @Getter
 public class PlayerListsManager {
     private PlayerList whitelist;
+    private PlayerList blacklist;
     private PlayerList spectatorWhitelist;
     private PlayerList friendsList;
     private PlayerList ignoreList;
     private PlayerList stalkList;
+    private PlayerList spawnPatrolIgnoreList;
     private ScheduledFuture<?> refreshScheduledFuture;
 
     public void init() { // must be called after config is loaded
         whitelist = new PlayerList("whitelist", CONFIG.server.extra.whitelist.whitelist);
+        blacklist = new PlayerList("blacklist", CONFIG.server.extra.whitelist.blacklist);
         spectatorWhitelist = new PlayerList("spectatorWhitelist", CONFIG.server.spectator.whitelist);
         friendsList = new PlayerList("friendsList", CONFIG.client.extra.friendsList);
         ignoreList = new PlayerList("ignoreList", CONFIG.client.extra.chat.ignoreList);
         stalkList = new PlayerList("stalkList", CONFIG.client.extra.stalk.stalking);
+        spawnPatrolIgnoreList = new PlayerList("spawnPatrolIgnoreList", CONFIG.client.extra.spawnPatrol.ignoreList);
         startRefreshTask();
     }
 
@@ -57,7 +61,7 @@ public class PlayerListsManager {
 
     private void refreshLists() {
         var playerEntryList = Stream
-            .of(getWhitelist(), getSpectatorWhitelist(), getFriendsList(), getIgnoreList(), getStalkList())
+            .of(getWhitelist(), getBlacklist(), getSpectatorWhitelist(), getFriendsList(), getIgnoreList(), getStalkList())
             .map(PlayerList::entries)
             .flatMap(Collection::stream)
             .toList();
@@ -97,14 +101,18 @@ public class PlayerListsManager {
     }
 
     public static Optional<ProfileData> getProfileFromUsername(final String username) {
-        return MojangApi.INSTANCE.getProfile(username).map(o -> (ProfileData) o)
-            .or(() -> CraftheadApi.INSTANCE.getProfile(username).map(o -> (ProfileData) o)
-                .or(() -> MinetoolsApi.INSTANCE.getProfileFromUsername(username)));
+        return MojangApi.INSTANCE.getProfile(username).map(o -> (ProfileData) o).filter(PlayerListsManager::validProfile)
+            .or(() -> CraftheadApi.INSTANCE.getProfile(username).map(o -> (ProfileData) o).filter(PlayerListsManager::validProfile)
+                .or(() -> MinetoolsApi.INSTANCE.getProfileFromUsername(username).filter(PlayerListsManager::validProfile)));
     }
 
     public static Optional<ProfileData> getProfileFromUUID(final UUID uuid) {
-        return SessionServerApi.INSTANCE.getProfile(uuid).map(o -> (ProfileData) o)
-            .or(() -> CraftheadApi.INSTANCE.getProfile(uuid).map(o -> (ProfileData) o)
-                .or(() -> MinetoolsApi.INSTANCE.getProfileFromUUID(uuid)));
+        return SessionServerApi.INSTANCE.getProfile(uuid).map(o -> (ProfileData) o).filter(PlayerListsManager::validProfile)
+            .or(() -> CraftheadApi.INSTANCE.getProfile(uuid).map(o -> (ProfileData) o).filter(PlayerListsManager::validProfile)
+                .or(() -> MinetoolsApi.INSTANCE.getProfileFromUUID(uuid).filter(PlayerListsManager::validProfile)));
+    }
+
+    private static boolean validProfile(final ProfileData profile) {
+        return profile != null && profile.uuid() != null && profile.name() != null;
     }
 }

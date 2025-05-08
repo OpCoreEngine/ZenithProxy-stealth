@@ -1,13 +1,12 @@
 package com.zenith.network.server.handler.spectator.incoming;
 
-import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.zenith.Proxy;
 import com.zenith.cache.data.entity.Entity;
-import com.zenith.event.proxy.PrivateMessageSendEvent;
+import com.zenith.event.message.PrivateMessageSendEvent;
 import com.zenith.feature.spectator.SpectatorEntityRegistry;
 import com.zenith.feature.spectator.SpectatorSync;
-import com.zenith.network.registry.PacketHandler;
+import com.zenith.network.codec.PacketHandler;
 import com.zenith.network.server.ServerSession;
 import com.zenith.util.ComponentSerializer;
 import net.kyori.adventure.text.Component;
@@ -16,9 +15,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 
-import java.util.Optional;
-
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 
 public class ServerChatSpectatorHandler implements PacketHandler<ServerboundChatPacket, ServerSession> {
     @Override
@@ -26,15 +23,19 @@ public class ServerChatSpectatorHandler implements PacketHandler<ServerboundChat
         if (CONFIG.inGameCommands.enable) {
             EXECUTOR.execute(() -> {
                 if (IN_GAME_COMMAND.isCommandPrefixed(packet.getMessage())) {
-                    TERMINAL_LOG.info("{} executed spectator command: {}", session.getProfileCache().getProfile().getName(), packet.getMessage());
+                    TERMINAL_LOG.info("{} executed spectator command: {}", session.getName(), packet.getMessage());
                     if (CONFIG.server.spectator.fullCommandsEnabled && (!CONFIG.server.spectator.fullCommandsRequireRegularWhitelist || PLAYER_LISTS.getWhitelist().contains(session.getProfileCache().getProfile()))) {
                         final String fullCommandAndArgs = packet.getMessage().substring(CONFIG.inGameCommands.prefix.length()).trim(); // cut off the prefix
                         IN_GAME_COMMAND.handleInGameCommandSpectator(fullCommandAndArgs, session, true);
                     } else {
-                        handleCommandInput(packet.getMessage(), session);
+                        try {
+                            handleCommandInput(packet.getMessage(), session);
+                        } catch (Exception e) {
+                            SERVER_LOG.error("Failed to handle spectator command: {} from: {}", packet.getMessage(), session.getName(), e);
+                        }
                     }
                 } else {
-                    EVENT_BUS.postAsync(new PrivateMessageSendEvent(session.getProfileCache().getProfile().getId(), session.getProfileCache().getProfile().getName(), packet.getMessage()));
+                    EVENT_BUS.postAsync(new PrivateMessageSendEvent(session.getUUID(), session.getName(), packet.getMessage()));
                 }
             });
         }
@@ -126,16 +127,12 @@ public class ServerChatSpectatorHandler implements PacketHandler<ServerboundChat
                     return;
                 }
                 if (CONFIG.server.viaversion.enabled) {
-                    Optional<ProtocolVersion> viaClientProtocolVersion = Via.getManager().getConnectionManager().getConnectedClients().values().stream()
-                        .filter(client -> client.getChannel() == session.getChannel())
-                        .map(con -> con.getProtocolInfo().protocolVersion())
-                        .findFirst();
-                    if (viaClientProtocolVersion.isPresent() && viaClientProtocolVersion.get().olderThan(ProtocolVersion.v1_20_5)) {
+                    if (session.getProtocolVersion().olderThan(ProtocolVersion.v1_20_5)) {
                         session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<red>Unsupported Client MC Version"), false));
                         return;
                     }
                 }
-                session.transferToControllingPlayer(CONFIG.server.getProxyAddressForTransfer(), CONFIG.server.getProxyPortForTransfer());
+                session.transferToControllingPlayer();
             }
             default -> handleCommandInput("help", session);
         }

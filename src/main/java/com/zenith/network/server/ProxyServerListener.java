@@ -1,13 +1,11 @@
 package com.zenith.network.server;
 
-import com.zenith.Proxy;
-import com.zenith.event.proxy.ServerConnectionAddedEvent;
-import com.zenith.event.proxy.ServerConnectionRemovedEvent;
+import com.zenith.event.player.PlayerConnectionAddedEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.geysermc.mcprotocollib.network.event.server.*;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 
 
 @RequiredArgsConstructor
@@ -35,15 +33,9 @@ public class ProxyServerListener implements ServerListener {
             connection.setReadTimeout(CONFIG.server.extra.timeout.seconds);
         else
             connection.setReadTimeout(0);
-        EVENT_BUS.post(new ServerConnectionAddedEvent(connection));
+        EVENT_BUS.post(new PlayerConnectionAddedEvent(connection));
     }
 
     @Override
-    public void sessionRemoved(SessionRemovedEvent event) {
-        ServerSession connection = (ServerSession) event.getSession();
-        if (connection != null) {
-            Proxy.getInstance().getCurrentPlayer().compareAndSet(connection, null);
-        }
-        EVENT_BUS.post(new ServerConnectionRemovedEvent(connection));
-    }
+    public void sessionRemoved(SessionRemovedEvent event) {}
 }

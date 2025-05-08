@@ -3,7 +3,6 @@ package com.zenith.network;
 import com.zenith.feature.api.sessionserver.SessionServerApi;
 import com.zenith.network.server.ServerSession;
 import org.geysermc.mcprotocollib.auth.GameProfile;
-import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginCompressionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginFinishedPacket;
 
@@ -11,7 +10,7 @@ import javax.crypto.SecretKey;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.zenith.Shared.CONFIG;
+import static com.zenith.Globals.CONFIG;
 
 public class UserAuthTask implements Runnable {
     private final ServerSession session;
@@ -43,13 +42,13 @@ public class UserAuthTask implements Runnable {
                 return;
             }
             // blindly trusting the player's requested UUID if present
-            final var uuid = session.getLoginProfileUUID() == null
+            final var uuid = session.getLoginProfileUUID() == session.getDefaultUUID()
                 ? UUID.nameUUIDFromBytes(("OfflinePlayer:" + session.getUsername()).getBytes())
                 : session.getLoginProfileUUID();
             profile = new GameProfile(uuid, session.getUsername());
         }
 
-        this.session.setFlag(MinecraftConstants.PROFILE_KEY, profile);
+        session.getProfileCache().setProfile(profile);
 
         final var threshold = CONFIG.server.compressionThreshold;
         if (threshold >= 0) {

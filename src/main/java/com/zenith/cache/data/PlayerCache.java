@@ -45,7 +45,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static com.zenith.Shared.CLIENT_LOG;
+import static com.zenith.Globals.CLIENT_LOG;
 import static java.util.Objects.nonNull;
 import static org.geysermc.mcprotocollib.protocol.data.game.entity.EquipmentSlot.*;
 
@@ -85,6 +85,7 @@ public class PlayerCache implements CachedData {
     private static final MutableVec3i DEFAULT_SPAWN_POSITION = new MutableVec3i(0, 0, 0);
     protected MutableVec3i spawnPosition = DEFAULT_SPAWN_POSITION;
     protected IntArrayFIFOQueue teleportQueue = new IntArrayFIFOQueue();
+    protected boolean respawning = false;
 
     public PlayerCache(final EntityCache entityCache) {
         this.entityCache = entityCache;
@@ -144,6 +145,7 @@ public class PlayerCache implements CachedData {
         this.thePlayer.getPotionEffectMap().clear();
         this.isSneaking = this.isSprinting = false;
         this.heldItemSlot = 0;
+        this.respawning = false;
     }
 
     @Override

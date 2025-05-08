@@ -3,18 +3,18 @@ package com.zenith.command.impl;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.zenith.Proxy;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
 import com.zenith.discord.Embed;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
-import static com.zenith.Shared.CONFIG;
-import static com.zenith.Shared.PLAYER_LISTS;
+import static com.zenith.Globals.CONFIG;
+import static com.zenith.Globals.PLAYER_LISTS;
+import static com.zenith.command.api.CommandOutputHelper.playerListToString;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
 import static com.zenith.command.brigadier.ToggleArgumentType.toggle;
-import static com.zenith.command.util.CommandOutputHelper.playerListToString;
 import static com.zenith.discord.DiscordBot.escape;
 
 public class WhitelistCommand extends Command {
@@ -29,12 +29,16 @@ public class WhitelistCommand extends Command {
             Whitelisted players are allowed to both control the account in-game and spectate.
             
             `autoAddZenithAccount` will add the MC account you have logged in Zenith with to the whitelist.
+            
+            Blacklist is only used and shown if the whitelist or spectator whitelist is disabled (see the `unsupported` command`)
             """)
             .usageLines(
                 "add/del <player>",
                 "list",
                 "clear",
-                "autoAddZenithAccount on/off"
+                "autoAddZenithAccount on/off",
+                "blacklist add/del <player>",
+                "blacklist clear"
             )
             .aliases("wl")
             .build();
@@ -77,13 +81,42 @@ public class WhitelistCommand extends Command {
                           c.getSource().getEmbed()
                               .title("Auto Add Zenith Account " + toggleStrCaps(CONFIG.server.extra.whitelist.autoAddClient));
                           return OK;
+                      })))
+            .then(literal("blacklist").requires(Command::validateAccountOwner)
+                      .then(literal("add").then(argument("player", string()).executes(c -> {
+                          final String player = StringArgumentType.getString(c, "player");
+                          PLAYER_LISTS.getBlacklist().add(player).ifPresentOrElse(e ->
+                              c.getSource().getEmbed()
+                                  .title("Added user: " + escape(e.getUsername()) + " To Blacklist"),
+                              () -> c.getSource().getEmbed()
+                                  .title("Failed to add user: " + escape(player) + " to blacklist. Unable to lookup profile."));
+                          return OK;
+                      })))
+                      .then(literal("del").then(argument("player", string()).executes(c -> {
+                          final String player = StringArgumentType.getString(c, "player");
+                          PLAYER_LISTS.getBlacklist().remove(player);
+                          c.getSource().getEmbed()
+                              .title("Removed user: " + escape(player) + " From Blacklist");
+                          Proxy.getInstance().kickNonWhitelistedPlayers();
+                          return 1;
+                      })))
+                      .then(literal("clear").executes(c -> {
+                          PLAYER_LISTS.getBlacklist().clear();
+                          c.getSource().getEmbed()
+                              .title("Blacklist Cleared");
+                          Proxy.getInstance().kickNonWhitelistedPlayers();
+                          return OK;
                       })));
     }
 
     @Override
-    public void postPopulate(final Embed builder) {
+    public void defaultEmbed(final Embed builder) {
+        var listStr = "**Whitelist**\n" + playerListToString(PLAYER_LISTS.getWhitelist());
+        if (!CONFIG.server.extra.whitelist.enable || !CONFIG.server.spectator.whitelistEnabled) {
+            listStr += "\n**BlackList:**\n" + playerListToString(PLAYER_LISTS.getBlacklist());
+        }
         builder
-            .description(playerListToString(PLAYER_LISTS.getWhitelist()))
+            .description(listStr)
             .addField("Auto Add Zenith Account", toggleStr(CONFIG.server.extra.whitelist.autoAddClient), false)
             .primaryColor();
     }

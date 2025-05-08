@@ -1,6 +1,6 @@
 package com.zenith.mc.block;
 
-import com.zenith.feature.world.raycast.RayIntersection;
+import com.zenith.feature.player.raycast.RayIntersection;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -149,4 +149,15 @@ public record LocalizedCollisionBox(
         return new RayIntersection(x1 + tmin * xLen, y1 + tmin * yLen, z1 + tmin * zLen, intersectingFace);
     }
 
+    public double centerX() {
+        return (minX + maxX) / 2.0;
+    }
+
+    public double centerY() {
+        return (minY + maxY) / 2.0;
+    }
+
+    public double centerZ() {
+        return (minZ + maxZ) / 2.0;
+    }
 }

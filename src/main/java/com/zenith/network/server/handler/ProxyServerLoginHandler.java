@@ -2,17 +2,16 @@ package com.zenith.network.server.handler;
 
 import com.zenith.Proxy;
 import com.zenith.cache.data.PlayerCache;
-import com.zenith.event.proxy.PlayerLoginEvent;
-import com.zenith.event.proxy.ProxyClientConnectedEvent;
-import com.zenith.event.proxy.ProxySpectatorConnectedEvent;
-import com.zenith.feature.world.World;
+import com.zenith.event.player.PlayerConnectedEvent;
+import com.zenith.event.player.PlayerLoginEvent;
+import com.zenith.event.player.SpectatorConnectedEvent;
+import com.zenith.feature.player.World;
 import com.zenith.network.server.ServerSession;
 import com.zenith.network.server.ZenithServerInfoBuilder;
-import com.zenith.util.Maps;
 import com.zenith.util.Wait;
+import com.zenith.util.struct.Maps;
 import net.kyori.adventure.key.Key;
 import org.geysermc.mcprotocollib.auth.GameProfile;
-import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.data.game.ServerLink;
 import org.geysermc.mcprotocollib.protocol.data.game.ServerLinkType;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
@@ -22,7 +21,7 @@ import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundServerDataPacket;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 import static java.util.Arrays.asList;
 import static java.util.Objects.nonNull;
 
@@ -30,13 +29,21 @@ public class ProxyServerLoginHandler {
     public static final ProxyServerLoginHandler INSTANCE = new ProxyServerLoginHandler();
 
     public void loggedIn(ServerSession session) {
-        final GameProfile clientGameProfile = session.getFlag(MinecraftConstants.PROFILE_KEY);
+        final GameProfile clientGameProfile = session.getProfileCache().getProfile();
+        if (clientGameProfile == null) {
+            session.disconnect("Failed to retrieve profile.");
+            return;
+        }
         SERVER_LOG.info("Player connected: UUID: {}, Username: {}, MC: {} Address: {}", clientGameProfile.getId(), clientGameProfile.getName(), session.getMCVersion(), session.getRemoteAddress());
         EXECUTOR.execute(() -> finishLogin(session));
     }
 
     private void finishLogin(ServerSession connection) {
-        final GameProfile clientGameProfile = connection.getFlag(MinecraftConstants.PROFILE_KEY);
+        final GameProfile clientGameProfile = connection.getProfileCache().getProfile();
+        if (clientGameProfile == null) {
+            connection.disconnect("Failed to retrieve profile.");
+            return;
+        }
         if (!Wait.waitUntil(() -> Proxy.getInstance().isConnected()
                                 && (Proxy.getInstance().getOnlineTimeSeconds() > 1 || Proxy.getInstance().isInQueue())
                                 && CACHE.getPlayerCache().getEntityId() != -1
@@ -45,7 +52,8 @@ public class ProxyServerLoginHandler {
                                 && nonNull(CACHE.getChunkCache().getCurrentDimension())
                                 && nonNull(CACHE.getChunkCache().getWorldName())
                                 && nonNull(CACHE.getTabListCache().get(CACHE.getProfileCache().getProfile().getId()))
-                                && connection.isWhitelistChecked(),
+                                && connection.isWhitelistChecked()
+                                && CACHE.getPlayerCache().getTeleportQueue().isEmpty(),
                             20)) {
             connection.disconnect("Client login timed out.");
             return;
@@ -53,9 +61,10 @@ public class ProxyServerLoginHandler {
         // avoid race condition if player disconnects sometime during our wait
         if (!connection.isConnected()) return;
         connection.setPlayer(true);
-        EVENT_BUS.post(new PlayerLoginEvent(connection));
+        EVENT_BUS.post(new PlayerLoginEvent.Pre(connection));
+        if (!connection.isConnected()) return;
         if (connection.isSpectator()) {
-            EVENT_BUS.post(new ProxySpectatorConnectedEvent(connection, clientGameProfile));
+            EVENT_BUS.post(new SpectatorConnectedEvent(connection, clientGameProfile));
             connection.send(new ClientboundLoginPacket(
                 connection.getSpectatorSelfEntityId(),
                 CACHE.getPlayerCache().isHardcore(),
@@ -81,7 +90,7 @@ public class ProxyServerLoginHandler {
                 false
             ));
         } else {
-            EVENT_BUS.post(new ProxyClientConnectedEvent(connection, clientGameProfile));
+            EVENT_BUS.post(new PlayerConnectedEvent(connection, clientGameProfile));
             connection.send(new ClientboundLoginPacket(
                 CACHE.getPlayerCache().getEntityId(),
                 CACHE.getPlayerCache().isHardcore(),

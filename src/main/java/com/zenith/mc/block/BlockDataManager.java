@@ -6,43 +6,40 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.zenith.util.Maps;
 import com.zenith.util.math.MathHelper;
+import com.zenith.util.struct.Maps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import lombok.SneakyThrows;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
-import static com.zenith.Shared.OBJECT_MAPPER;
+import static com.zenith.Globals.OBJECT_MAPPER;
 
 public class BlockDataManager {
-    private final Int2ObjectOpenHashMap<Block> blockStateIdToBlock;
-    private final Int2ObjectOpenHashMap<List<CollisionBox>> blockStateIdToCollisionBoxes;
-    private final Int2ObjectOpenHashMap<List<CollisionBox>> blockStateIdToInteractionBoxes;
-    private final Int2ObjectOpenHashMap<FluidState> blockStateIdToFluidState = new Int2ObjectOpenHashMap<>(100, Maps.FAST_LOAD_FACTOR);
-
-    public BlockDataManager() {
-        int blockStateIdCount = BlockRegistry.REGISTRY.getIdMap().int2ObjectEntrySet().stream()
-            .map(Map.Entry::getValue)
-            .map(Block::maxStateId)
-            .max(Integer::compareTo)
-            .orElseThrow();
-        blockStateIdToBlock = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);
-        blockStateIdToCollisionBoxes = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);
-        blockStateIdToInteractionBoxes = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);
-        try {
-            init();
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
+    static final int blockStateIdCount = BlockRegistry.REGISTRY.getIdMap().int2ObjectEntrySet().stream()
+        .map(Map.Entry::getValue)
+        .map(Block::maxStateId)
+        .max(Integer::compareTo)
+        .orElseThrow();
+    private static final Int2ObjectOpenHashMap<Block> blockStateIdToBlock = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);;
+    private static final Int2ObjectOpenHashMap<List<CollisionBox>> blockStateIdToCollisionBoxes = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);
+    private static final Int2ObjectOpenHashMap<List<CollisionBox>> blockStateIdToInteractionBoxes = new Int2ObjectOpenHashMap<>(blockStateIdCount, Maps.FAST_LOAD_FACTOR);
+    private static final Int2ObjectOpenHashMap<FluidState> blockStateIdToFluidState = new Int2ObjectOpenHashMap<>(100, Maps.FAST_LOAD_FACTOR);
+    private static final IntOpenHashSet pathfindableStateIds = new IntOpenHashSet();
+    private static final IntOpenHashSet replaceableStateIds = new IntOpenHashSet();
+    private static final IntOpenHashSet bottomSlabStateIds = new IntOpenHashSet();
+    private static final IntOpenHashSet doubleSlabStateIds = new IntOpenHashSet();
+    static {
+        init();
     }
 
     @SneakyThrows
-    private void init() {
+    private static void init() {
         for (Int2ObjectMap.Entry<Block> entry : BlockRegistry.REGISTRY.getIdMap().int2ObjectEntrySet()) {
             var block = entry.getValue();
             for (int i = block.minStateId(); i <= block.maxStateId(); i++) {
@@ -51,7 +48,7 @@ public class BlockDataManager {
         }
         initShapeCache("blockCollisionShapes", blockStateIdToCollisionBoxes);
         initShapeCache("blockInteractionShapes", blockStateIdToInteractionBoxes);
-        try (JsonParser fluidsParse = OBJECT_MAPPER.createParser(getClass().getResourceAsStream(
+        try (JsonParser fluidsParse = OBJECT_MAPPER.createParser(BlockDataManager.class.getResourceAsStream(
             "/mcdata/fluidStates.json"))) {
             TreeNode treeNode = fluidsParse.getCodec().readTree(fluidsParse);
             ObjectNode fluidStatesNode = (ObjectNode) treeNode;
@@ -66,12 +63,44 @@ public class BlockDataManager {
                 blockStateIdToFluidState.put(stateId, new FluidState(water, source, amount, falling));
             }
         }
+        try (JsonParser pathfindableParse = OBJECT_MAPPER.createParser(BlockDataManager.class.getResourceAsStream(
+            "/mcdata/pathfindable.json"))) {
+            TreeNode pathfindableNode = pathfindableParse.getCodec().readTree(pathfindableParse);
+            ArrayNode pathfindableArray = (ArrayNode) pathfindableNode;
+            pathfindableArray.elements().forEachRemaining((stateId) -> {
+                pathfindableStateIds.add(stateId.asInt());
+            });
+        }
+        try (JsonParser replaceableParse = OBJECT_MAPPER.createParser(BlockDataManager.class.getResourceAsStream(
+            "/mcdata/replaceable.json"))) {
+            TreeNode replaceableNode = replaceableParse.getCodec().readTree(replaceableParse);
+            ArrayNode replaceableArray = (ArrayNode) replaceableNode;
+            replaceableArray.elements().forEachRemaining((stateId) -> {
+                replaceableStateIds.add(stateId.asInt());
+            });
+        }
+        try (JsonParser slabsParse = OBJECT_MAPPER.createParser(BlockDataManager.class.getResourceAsStream(
+            "/mcdata/slabBlockStateIds.json"))) {
+            TreeNode treeNode = slabsParse.getCodec().readTree(slabsParse);
+//            ArrayNode topSlabArray = (ArrayNode) treeNode.get("topSlabs");
+//            topSlabArray.elements().forEachRemaining((stateId) -> {
+//                topSlabStateIds.add(stateId.asInt());
+//            });
+            ArrayNode bottomSlabArray = (ArrayNode) treeNode.get("bottomSlabs");
+            bottomSlabArray.elements().forEachRemaining((stateId) -> {
+                bottomSlabStateIds.add(stateId.asInt());
+            });
+            ArrayNode doubleSlabArray = (ArrayNode) treeNode.get("doubleSlabs");
+            doubleSlabArray.elements().forEachRemaining((stateId) -> {
+                doubleSlabStateIds.add(stateId.asInt());
+            });
+        }
         DataPalette.GLOBAL_PALETTE_BITS_PER_ENTRY = MathHelper.log2Ceil(blockStateIdToBlock.size());
     }
 
     @SneakyThrows
-    private void initShapeCache(String name, Int2ObjectOpenHashMap<List<CollisionBox>> output) {
-        try (JsonParser shapesParser = OBJECT_MAPPER.createParser(getClass().getResourceAsStream(
+    private static void initShapeCache(String name, Int2ObjectOpenHashMap<List<CollisionBox>> output) {
+        try (JsonParser shapesParser = OBJECT_MAPPER.createParser(BlockDataManager.class.getResourceAsStream(
             "/mcdata/" + name + ".json"))) {
             final Int2ObjectOpenHashMap<List<CollisionBox>> shapeIdToCollisionBoxes = new Int2ObjectOpenHashMap<>(100);
             TreeNode node = shapesParser.getCodec().readTree(shapesParser);
@@ -164,6 +193,14 @@ public class BlockDataManager {
         return blockStateIdToFluidState.get(blockStateId);
     }
 
+    public boolean isPathfindable(int blockStateId) {
+        return pathfindableStateIds.contains(blockStateId);
+    }
+
+    public boolean isReplaceable(int blockStateId) {
+        return replaceableStateIds.contains(blockStateId);
+    }
+
     public boolean isAir(Block block) {
         return block == BlockRegistry.AIR || block == BlockRegistry.CAVE_AIR || block == BlockRegistry.VOID_AIR;
     }
@@ -176,5 +213,22 @@ public class BlockDataManager {
         if (block == BlockRegistry.FROSTED_ICE) slippy = 0.98f;
         if (block == BlockRegistry.BLUE_ICE) slippy = 0.989f;
         return slippy;
+    }
+
+    public boolean isShapeFullBlock(int blockStateId) {
+        List<CollisionBox> collisionBoxes = getCollisionBoxesFromBlockStateId(blockStateId);
+        if (collisionBoxes.size() != 1) {
+            return false;
+        }
+        var cb = collisionBoxes.getFirst();
+        return cb.isFullBlock();
+    }
+
+    public boolean isBottomSlab(int blockStateId) {
+        return bottomSlabStateIds.contains(blockStateId);
+    }
+
+    public boolean isDoubleSlab(int blockStateId) {
+        return doubleSlabStateIds.contains(blockStateId);
     }
 }

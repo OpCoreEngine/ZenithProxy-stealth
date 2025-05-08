@@ -2,10 +2,10 @@ package com.zenith.command.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.zenith.Proxy;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
 import com.zenith.feature.api.vcapi.VcApi;
 import com.zenith.util.math.MathHelper;
 
@@ -39,7 +39,7 @@ public class PlaytimeCommand extends Command {
                                              .title("Playtime")
                                              .addField("Player", playerName, true)
                                              .description(MathHelper.formatDurationLong(Duration.ofSeconds(response.playtimeSeconds())))
-                                             .thumbnail(Proxy.getInstance().getAvatarURL(playerName).toString())
+                                             .thumbnail(Proxy.getInstance().getPlayerHeadURL(playerName).toString())
                                              .primaryColor(),
                                      () -> c.getSource().getEmbed()
                                          .title(playerName + " not found")

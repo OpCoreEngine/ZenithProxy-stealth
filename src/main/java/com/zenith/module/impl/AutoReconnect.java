@@ -3,12 +3,11 @@ package com.zenith.module.impl;
 import com.github.rfresh2.EventConsumer;
 import com.google.common.collect.Sets;
 import com.zenith.Proxy;
-import com.zenith.event.proxy.AutoReconnectEvent;
-import com.zenith.event.proxy.ConnectEvent;
-import com.zenith.event.proxy.DisconnectEvent;
-import com.zenith.module.Module;
+import com.zenith.event.client.ClientConnectEvent;
+import com.zenith.event.client.ClientDisconnectEvent;
+import com.zenith.event.module.AutoReconnectEvent;
+import com.zenith.module.api.Module;
 import com.zenith.util.Wait;
-import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -16,7 +15,8 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import static com.github.rfresh2.EventConsumer.of;
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
+import static com.zenith.util.DisconnectMessages.*;
 
 public class AutoReconnect extends Module {
     private @Nullable Future<?> autoReconnectFuture;
@@ -24,8 +24,8 @@ public class AutoReconnect extends Module {
     @Override
     public List<EventConsumer<?>> registerEvents() {
         return List.of(
-            of(DisconnectEvent.class, this::handleDisconnectEvent),
-            of(ConnectEvent.class, this::handleConnectEvent)
+            of(ClientDisconnectEvent.class, this::handleDisconnectEvent),
+            of(ClientConnectEvent.class, this::handleConnectEvent)
         );
     }
 
@@ -53,7 +53,7 @@ public class AutoReconnect extends Module {
         cancelAutoReconnect();
     }
 
-    public void handleDisconnectEvent(DisconnectEvent event) {
+    public void handleDisconnectEvent(ClientDisconnectEvent event) {
         if (shouldAutoDisconnectCancelAutoReconnect(event)) {
             info("Cancelling AutoReconnect due to AutoDisconnect cancelAutoReconnect");
             return;
@@ -73,13 +73,13 @@ public class AutoReconnect extends Module {
         this.autoReconnectFuture = EXECUTOR.submit(() -> autoReconnectRunnable(delaySeconds));
     }
 
-    public boolean shouldAutoDisconnectCancelAutoReconnect(DisconnectEvent event) {
+    public boolean shouldAutoDisconnectCancelAutoReconnect(ClientDisconnectEvent event) {
         return CONFIG.client.extra.utility.actions.autoDisconnect.enabled
             && CONFIG.client.extra.utility.actions.autoDisconnect.cancelAutoReconnect
             && AutoDisconnect.isAutoDisconnectReason(event.reason());
     }
 
-    public void handleConnectEvent(ConnectEvent event) {
+    public void handleConnectEvent(ClientConnectEvent event) {
         cancelAutoReconnect();
     }
 
@@ -114,7 +114,7 @@ public class AutoReconnect extends Module {
     private static final Set<String> RECONNECTABLE_DISCONNECT_REASONS = Sets.newHashSet(
         SYSTEM_DISCONNECT,
         MANUAL_DISCONNECT,
-        MinecraftConstants.SERVER_CLOSING_MESSAGE,
+        SERVER_CLOSING_MESSAGE,
         LOGIN_FAILED,
         AUTH_REQUIRED,
         MAX_PT_DISCONNECT

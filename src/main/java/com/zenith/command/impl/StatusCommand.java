@@ -3,13 +3,14 @@ package com.zenith.command.impl;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.zenith.Proxy;
 import com.zenith.cache.data.entity.Entity;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
 import com.zenith.feature.queue.Queue;
 import com.zenith.module.impl.*;
 import com.zenith.network.server.ServerSession;
+import com.zenith.util.ImageInfo;
 import com.zenith.util.math.MathHelper;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
@@ -18,7 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 import static java.util.Objects.nonNull;
 
 public class StatusCommand extends Command {
@@ -53,7 +54,7 @@ public class StatusCommand extends Command {
     private String getCurrentClientUserName() {
         ServerSession currentConnection = Proxy.getInstance().getCurrentPlayer().get();
         if (nonNull(currentConnection)) {
-            return currentConnection.getProfileCache().getProfile().getName() + " [" + currentConnection.getPing() + "ms]";
+            return currentConnection.getName() + " [" + currentConnection.getPing() + "ms]";
         } else {
             return "None";
         }
@@ -61,7 +62,7 @@ public class StatusCommand extends Command {
 
     private List<String> getSpectatorUserNames() {
         return Proxy.getInstance().getSpectatorConnections().stream()
-                .map(connection -> connection.getProfileCache().getProfile().getName() + " [" + connection.getPing() + "ms]")
+                .map(connection -> connection.getName() + " [" + connection.getPing() + "ms]")
                 .collect(Collectors.toList());
     }
 
@@ -107,7 +108,8 @@ public class StatusCommand extends Command {
                                     ? CONFIG.theme.inQueue.discord()
                                     : CONFIG.theme.success.discord())
                                : CONFIG.theme.error.discord())
-                    .thumbnail(Proxy.getInstance().getAvatarURL(CONFIG.authentication.username).toString())
+                    .thumbnail(getThumbnailImage())
+                    .addField("Plugins", ImageInfo.inImageCode() ? "N/A (`java` required)" : toggleStr(CONFIG.plugins.enabled), true)
                     .addField("AutoDisconnect", toggleStr(MODULE.get(AutoDisconnect.class).isEnabled()), true)
                     .addField("AutoReconnect", toggleStr(MODULE.get(AutoReconnect.class).isEnabled()), true)
                     .addField("KillAura", toggleStr(MODULE.get(KillAura.class).isEnabled()), true)
@@ -127,7 +129,6 @@ public class StatusCommand extends Command {
                     .addField("ActionLimiter", toggleStr(MODULE.get(ActionLimiter.class).isEnabled()), true)
                     .addField("Spammer", toggleStr(MODULE.get(Spammer.class).isEnabled()), true)
                     .addField("Replay Recording", toggleStr(MODULE.get(ReplayMod.class).isEnabled()), true)
-                    .addField("ESP", toggleStr(MODULE.get(ESP.class).isEnabled()), true)
                     .addField("AutoArmor", toggleStr(MODULE.get(AutoArmor.class).isEnabled()), true)
                     .addField("ChatHistory", toggleStr(MODULE.get(ChatHistory.class).isEnabled()), true);
             }))
@@ -140,7 +141,7 @@ public class StatusCommand extends Command {
                         ? CONFIG.theme.inQueue.discord()
                         : CONFIG.theme.success.discord())
                                : CONFIG.theme.error.discord())
-                    .thumbnail(Proxy.getInstance().getAvatarURL(CONFIG.authentication.username).toString())
+                    .thumbnail(getThumbnailImage())
                     .addField("Status", getStatus(), true)
                     .addField("Connected Player", getCurrentClientUserName(), true)
                     .addField("Online For", getOnlineTime(), true)
@@ -166,5 +167,12 @@ public class StatusCommand extends Command {
                     .addField("AutoUpdate", toggleStr(LAUNCH_CONFIG.auto_update), true);
                  return OK;
             });
+    }
+
+    private static String getThumbnailImage() {
+        if (Proxy.getInstance().isConnected() && CACHE.getProfileCache().getProfile() != null) {
+
+        }
+        return Proxy.getInstance().getPlayerHeadURL(CONFIG.authentication.username).toString();
     }
 }

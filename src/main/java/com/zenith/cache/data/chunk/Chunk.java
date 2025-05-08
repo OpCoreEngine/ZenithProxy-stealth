@@ -22,9 +22,9 @@ public class Chunk {
     final List<BlockEntityInfo> blockEntities;
     LightUpdateData lightUpdateData;
 
-    static final Map<HeightmapTypes, long[]> EMPTY_HEIGHT_MAP = generateEmptyHeightMap();
+    public static final Map<HeightmapTypes, long[]> EMPTY_HEIGHT_MAP = generateEmptyHeightMap();
 
-    static Map<HeightmapTypes, long[]> generateEmptyHeightMap() {
+    public static Map<HeightmapTypes, long[]> generateEmptyHeightMap() {
         return new EnumMap<>(HeightmapTypes.class);
     }
 

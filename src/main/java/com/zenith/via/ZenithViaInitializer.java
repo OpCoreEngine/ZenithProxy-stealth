@@ -1,21 +1,21 @@
 package com.zenith.via;
 
+import com.viaversion.vialoader.ViaLoader;
+import com.viaversion.vialoader.impl.platform.ViaBackwardsPlatformImpl;
+import com.viaversion.vialoader.netty.VLPipeline;
+import com.viaversion.vialoader.netty.ViaCodec;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
 import com.zenith.Proxy;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
-import net.raphimc.vialoader.ViaLoader;
-import net.raphimc.vialoader.impl.platform.ViaBackwardsPlatformImpl;
-import net.raphimc.vialoader.netty.VLPipeline;
-import net.raphimc.vialoader.netty.ViaCodec;
 import org.geysermc.mcprotocollib.network.tcp.TcpPacketCodec;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 
 public class ZenithViaInitializer {
     private final AtomicBoolean initialized = new AtomicBoolean(false);
@@ -45,6 +45,7 @@ public class ZenithViaInitializer {
             UserConnectionImpl userConnection = new UserConnectionImpl(channel, true);
             new ProtocolPipelineImpl(userConnection);
             channel.pipeline().addBefore(TcpPacketCodec.ID, VLPipeline.VIA_CODEC_NAME, new ViaCodec(userConnection));
+            channel.attr(VIA_USER).set(userConnection);
         }
     }
 

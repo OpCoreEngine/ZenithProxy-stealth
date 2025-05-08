@@ -1,32 +1,34 @@
 package com.zenith.command;
 
-import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandSources;
+import com.zenith.command.brigadier.BrigadierToMCProtocolLibConverter;
 import com.zenith.command.brigadier.CaseInsensitiveLiteralCommandNode;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
-import com.zenith.command.brigadier.CommandSource;
 import com.zenith.command.impl.*;
-import com.zenith.command.util.BrigadierToMCProtocolLibConverter;
 import lombok.Getter;
 import org.geysermc.mcprotocollib.protocol.data.game.command.CommandNode;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.TERMINAL_LOG;
+import static com.zenith.Globals.saveConfigAsync;
 import static java.util.Arrays.asList;
 
 @Getter
 public class CommandManager {
-    private final List<Command> commandsList = asList(
+    private final List<Command> commandsList = Lists.newArrayList(
         new ActionLimiterCommand(),
         new ActiveHoursCommand(),
         new AntiAFKCommand(),
@@ -51,13 +53,13 @@ public class CommandManager {
         new CommandConfigCommand(),
         new ConnectCommand(),
         new ConnectionTestCommand(),
+        new CoordinateObfuscationCommand(),
         new DatabaseCommand(),
         new DebugCommand(),
         new DisconnectCommand(),
         new DiscordManageCommand(),
         new DiscordNotificationsCommand(),
         new DisplayCoordsCommand(),
-        new ESPCommand(),
         new ExtraChatCommand(),
         new FriendCommand(),
         new HelpCommand(),
@@ -66,8 +68,12 @@ public class CommandManager {
         new JvmArgsCommand(),
         new KickCommand(),
         new KillAuraCommand(),
+        new LicenseCommand(),
         new MapCommand(),
+        new PathfinderCommand(),
+        new PearlLoader(),
         new PlaytimeCommand(),
+        new PluginsCommand(),
         new PrioCommand(),
         new QueueStatusCommand(),
         new QueueWarningCommand(),
@@ -97,6 +103,7 @@ public class CommandManager {
         new StatsCommand(),
         new StatusCommand(),
         new TablistCommand(),
+        new SpawnPatrolCommand(),
         new ThemeCommand(),
         new TransferCommand(),
         new UpdateCommand(),
@@ -107,18 +114,22 @@ public class CommandManager {
         new WhitelistCommand()
     );
     private final CommandDispatcher<CommandContext> dispatcher;
-    private final Supplier<CommandNode[]> MCProtocolLibCommandNodesSupplier;
+    @Getter private @NonNull CommandNode[] MCProtocolLibCommandNodes;
 
     public CommandManager() {
         this.dispatcher = new CommandDispatcher<>();
         registerCommands();
-        this.MCProtocolLibCommandNodesSupplier = Suppliers.memoize(
-            // should be safe to cache as we don't mutate zenith commands after startup
-            () -> BrigadierToMCProtocolLibConverter.convertNodesToMCProtocolLibNodes(this.dispatcher));
+        syncCommandNodes();
     }
 
     public void registerCommands() {
        commandsList.forEach(this::registerCommand);
+    }
+
+    public void registerPluginCommand(Command command) {
+        registerCommand(command);
+        commandsList.add(command);
+        syncCommandNodes();
     }
 
     public List<Command> getCommands() {
@@ -131,9 +142,13 @@ public class CommandManager {
             .toList();
     }
 
-    private void registerCommand(final Command command) {
+    void registerCommand(final Command command) {
         final LiteralCommandNode<CommandContext> node = dispatcher.register(command.register());
         command.commandUsage().getAliases().forEach(alias -> dispatcher.register(command.redirect(alias, node)));
+    }
+
+    void syncCommandNodes() {
+        this.MCProtocolLibCommandNodes = BrigadierToMCProtocolLibConverter.convertNodesToMCProtocolLibNodes(this.dispatcher);
     }
 
     public void execute(final CommandContext context, final ParseResults<CommandContext> parseResults) {
@@ -199,19 +214,8 @@ public class CommandManager {
         dispatcher.execute(parse);
     }
 
-    public String getCommandPrefix(final CommandSource source) {
-        // todo: tie this to each output instead because multiple outputs can be used regardless of source
-        //  insert a string that gets replaced?
-        //      abstract the embed builder output to a mutable intermediary?
-        return switch (source) {
-            case DISCORD -> CONFIG.discord.prefix;
-            case IN_GAME_PLAYER, SPECTATOR -> CONFIG.inGameCommands.slashCommands ? "/" : CONFIG.inGameCommands.prefix;
-            case TERMINAL -> "";
-        };
-    }
-
     public List<String> getCommandCompletions(final String input) {
-        final ParseResults<CommandContext> parse = this.dispatcher.parse(downcaseFirstWord(input), CommandContext.create(input, CommandSource.TERMINAL));
+        final ParseResults<CommandContext> parse = this.dispatcher.parse(downcaseFirstWord(input), CommandContext.create(input, CommandSources.TERMINAL));
         try {
             var suggestions = this.dispatcher.getCompletionSuggestions(parse).get(2L, TimeUnit.SECONDS);
             return suggestions.getList().stream()

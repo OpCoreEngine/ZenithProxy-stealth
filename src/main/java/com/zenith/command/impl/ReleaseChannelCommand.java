@@ -2,10 +2,11 @@ package com.zenith.command.impl;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.zenith.command.Command;
-import com.zenith.command.CommandUsage;
-import com.zenith.command.brigadier.CommandCategory;
-import com.zenith.command.brigadier.CommandContext;
+import com.zenith.command.api.Command;
+import com.zenith.command.api.CommandCategory;
+import com.zenith.command.api.CommandContext;
+import com.zenith.command.api.CommandUsage;
+import com.zenith.discord.Embed;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.zenith.Shared.*;
+import static com.zenith.Globals.*;
 import static com.zenith.command.brigadier.CustomStringArgumentType.wordWithChars;
 import static java.util.Arrays.asList;
 
@@ -54,7 +55,6 @@ public class ReleaseChannelCommand extends Command {
             .then(literal("list").executes(c -> {
                 c.getSource().getEmbed()
                     .title("Release Channel Info")
-                    .addField("Current Release Channel", LAUNCH_CONFIG.release_channel, true)
                     .addField("Available Platforms", PLATFORMS.stream().collect(Collectors.joining("`, `", "`", "`")), false)
                     .addField("Available Minecraft Versions", MINECRAFT_VERSIONS.stream().collect(Collectors.joining("`, `", "`", "`")), false)
                     .primaryColor();
@@ -73,6 +73,12 @@ public class ReleaseChannelCommand extends Command {
                                               setChannel(c, channel, minecraft_version, true);
                                               return OK;
                                           })))));
+    }
+
+    @Override
+    public void defaultEmbed(Embed embed) {
+        embed
+            .addField("Current Release Channel", LAUNCH_CONFIG.release_channel, false);
     }
 
     private void setChannel(com.mojang.brigadier.context.CommandContext<CommandContext> c, String channel, String minecraft_version, boolean pre) {
@@ -103,7 +109,6 @@ public class ReleaseChannelCommand extends Command {
         if (pre) LAUNCH_CONFIG.release_channel += ".pre";
         c.getSource().getEmbed()
             .title("Release Channel Updated!")
-            .addField("Release Channel", LAUNCH_CONFIG.release_channel, false)
             .addField("Info", "Please restart ZenithProxy for changes to take effect.\nOr apply now: `update`", false)
             .primaryColor();
         saveLaunchConfig();
