@@ -27,19 +27,20 @@ package com.zenith.mc.item.hashing;
 
 import com.google.common.hash.HashCode;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import org.geysermc.mcprotocollib.protocol.data.game.item.HashedStack;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.*;
 import org.geysermc.mcprotocollib.protocol.data.game.level.sound.BuiltinSound;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static com.zenith.Globals.DEFAULT_LOG;
 
 @SuppressWarnings("UnstableApiUsage")
 public class DataComponentHashers {
-    private static final Set<DataComponentType<?>> NOT_HASHED = ReferenceOpenHashSet.of(DataComponentTypes.CREATIVE_SLOT_LOCK, DataComponentTypes.MAP_POST_PROCESSING);
+    static final Set<DataComponentType<?>> NOT_HASHED = ReferenceOpenHashSet.of(DataComponentTypes.CREATIVE_SLOT_LOCK, DataComponentTypes.MAP_POST_PROCESSING);
     private static final Map<DataComponentType<?>, MinecraftHasher<?>> hashers = new HashMap<>();
 
     static {
@@ -258,29 +259,5 @@ public class DataComponentHashers {
             DEFAULT_LOG.error("Failed to hash item data component " + component.getKey() + " with value " + value + "!");
             throw exception;
         }
-    }
-
-    public static HashedStack hashStack(ItemStack stack) {
-        if (stack == null) {
-            return null;
-        }
-
-        DataComponents patch = stack.getDataComponents();
-        if (patch == null) {
-            return new HashedStack(stack.getId(), stack.getAmount(), Map.of(), Set.of());
-        }
-        Map<DataComponentType<?>, DataComponent<?, ?>> components = patch.getDataComponents();
-        Map<DataComponentType<?>, Integer> hashedAdditions = new HashMap<>();
-        Set<DataComponentType<?>> removals = new HashSet<>();
-        for (Map.Entry<DataComponentType<?>, DataComponent<?, ?>> component : components.entrySet()) {
-            if (NOT_HASHED.contains(component.getKey())) {
-                DEFAULT_LOG.debug("Not hashing component " + component.getKey() + " on stack " + stack);
-            } else if (component.getValue().getValue() == null) {
-                removals.add(component.getKey());
-            } else {
-                hashedAdditions.put(component.getKey(), hash((DataComponentType) component.getKey(), component.getValue().getValue()).asInt());
-            }
-        }
-        return new HashedStack(stack.getId(), stack.getAmount(), hashedAdditions, removals);
     }
 }

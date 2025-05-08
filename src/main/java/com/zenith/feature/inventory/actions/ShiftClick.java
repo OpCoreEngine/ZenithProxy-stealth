@@ -1,5 +1,7 @@
 package com.zenith.feature.inventory.actions;
 
+import com.zenith.cache.data.inventory.Container;
+import com.zenith.mc.item.hashing.ItemStackHasher;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -68,8 +70,7 @@ public class ShiftClick implements InventoryAction {
             slotId,
             actionType,
             action,
-            null,
-//            Container.EMPTY_STACK,
+            ItemStackHasher.hash(Container.EMPTY_STACK),
             changedSlots
         );
     }

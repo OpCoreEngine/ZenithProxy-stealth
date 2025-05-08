@@ -1,6 +1,7 @@
 package com.zenith.feature.inventory.actions;
 
 import com.zenith.cache.data.inventory.Container;
+import com.zenith.mc.item.hashing.ItemStackHasher;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +47,7 @@ public class DropMouseStack implements InventoryAction {
             -999,
             actionType,
             clickItemAction,
-            null,
-            // todo: fix for hashed stacks
-//            predictedMouseStack,
+            ItemStackHasher.hash(predictedMouseStack),
             Int2ObjectMaps.emptyMap()
         );
     }

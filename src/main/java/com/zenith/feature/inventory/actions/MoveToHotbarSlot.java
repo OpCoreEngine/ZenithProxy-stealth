@@ -1,5 +1,7 @@
 package com.zenith.feature.inventory.actions;
 
+import com.zenith.cache.data.inventory.Container;
+import com.zenith.mc.item.hashing.ItemStackHasher;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -41,7 +43,6 @@ public class MoveToHotbarSlot implements InventoryAction {
             CLIENT_LOG.debug("[{}, {}, {}] Can't swap empty stack", slotId, actionType, moveToHotbarAction);
             return null; // can't swap if clickStack is empty
         }
-        // todo: fix for hashed stacks
         final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
         int hotBarSlot = -1;
         boolean playerInv = containerId == 0;
@@ -60,12 +61,12 @@ public class MoveToHotbarSlot implements InventoryAction {
         }
         if (hotBarSlot != -1) {
             final ItemStack swapStack = container.getItemStack(hotBarSlot);
-//            changedSlots.put(hotBarSlot, clickStack);
-//            changedSlots.put(slotId, swapStack);
+            changedSlots.put(hotBarSlot, ItemStackHasher.hash(clickStack));
+            changedSlots.put(slotId, ItemStackHasher.hash(swapStack));
         } else {
             // there is no offhand slot id in the container, so only one slot is set as changed in the packet
             var offhandStack = CACHE.getPlayerCache().getEquipment(EquipmentSlot.OFF_HAND);
-//            changedSlots.put(slotId, offhandStack);
+            changedSlots.put(slotId, ItemStackHasher.hash(offhandStack));
         }
 
 
@@ -75,8 +76,7 @@ public class MoveToHotbarSlot implements InventoryAction {
             slotId,
             actionType,
             moveToHotbarAction,
-            null,
-//            Container.EMPTY_STACK,
+            ItemStackHasher.hash(Container.EMPTY_STACK),
             changedSlots
         );
     }

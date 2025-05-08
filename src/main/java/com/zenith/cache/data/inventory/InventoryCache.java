@@ -5,7 +5,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Data;
 import net.kyori.adventure.text.Component;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.MoveToHotbarAction;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCreativeModeSlotPacket;
@@ -13,7 +15,6 @@ import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE_LOG;
 import static com.zenith.Globals.CLIENT_LOG;
-import static java.util.Objects.isNull;
 
 @Data
 public class InventoryCache {
@@ -117,45 +118,21 @@ public class InventoryCache {
             CACHE_LOG.debug("Attempted to click in unknown container {}", packet.getContainerId());
             return;
         }
-//        if (packet.getContainerId() != 0 ) {
-//            if (packet.getActionType() == ContainerActionType.MOVE_TO_HOTBAR_SLOT
-//                && packet.getActionParam() instanceof MoveToHotbarAction hotbarAction
-//                && hotbarAction == MoveToHotbarAction.OFF_HAND
-//            ) {
-//                // offhand slot change is not sent in changed slots map as its not a slot in the container
-//                getPlayerInventory().setItemStack(45, container.getItemStack(packet.getSlot()));
-//            }
-//        }
-//        packet.getChangedSlots().forEach(container::setItemStack);
-        var carriedHashStack = packet.getCarriedItem();
-        if (carriedHashStack == null) {
-            mouseStack = null;
-        } else {
-            if (mouseStack == null) {
-                var newMouseStackEntry = packet.getChangedSlots().int2ObjectEntrySet().stream()
-                    .filter(e -> isNull(e.getValue()))
-                    .findFirst();
-                if (newMouseStackEntry.isPresent()) {
-                    mouseStack = container.getItemStack(newMouseStackEntry.get().getIntKey());
-                } else {
-                    CLIENT_LOG.error("Unable to find new mouse item stack: {}\nContainer: {}", carriedHashStack, container.getContents());
-                }
-            } else {
-                if (mouseStack.getId() == carriedHashStack.id()) {
-                    carriedHashStack.addedComponents();
-                } else {
-                    CLIENT_LOG.error("Mouse stack id mismatch: {} != {}", mouseStack.getId(), carriedHashStack.id());
-                }
+        if (packet.getContainerId() != 0 ) {
+            if (packet.getActionType() == ContainerActionType.MOVE_TO_HOTBAR_SLOT
+                && packet.getActionParam() instanceof MoveToHotbarAction hotbarAction
+                && hotbarAction == MoveToHotbarAction.OFF_HAND
+            ) {
+                // offhand slot change is not sent in changed slots map as its not a slot in the container
+                getPlayerInventory().setItemStack(45, container.getItemStack(packet.getSlot()));
             }
-            // find the matching itemstack in the inventory ???
-            var a = 0;
-
         }
-        // todo: fix
-//        mouseStack = packet.getCarriedItem();
-
-        // todo: fix
-//        packet.getChangedSlots().forEach(container::setItemStack);
+        Int2ObjectMap<@Nullable ItemStack> unhashedStacks = new Int2ObjectOpenHashMap<>();
+        packet.getChangedSlots().forEach((slot, hashedStack) -> {
+            var stack = container.hashToMatchingStack(hashedStack);
+            unhashedStacks.put((int) slot, stack);
+        });
+        unhashedStacks.forEach(container::setItemStack);
         lastContainerClick = System.currentTimeMillis();
         activeContainerId = packet.getContainerId();
     }

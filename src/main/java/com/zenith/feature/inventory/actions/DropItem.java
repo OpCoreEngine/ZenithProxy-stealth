@@ -1,5 +1,7 @@
 package com.zenith.feature.inventory.actions;
 
+import com.zenith.cache.data.inventory.Container;
+import com.zenith.mc.item.hashing.ItemStackHasher;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Data;
@@ -40,31 +42,30 @@ public class DropItem implements InventoryAction {
             CLIENT_LOG.debug("[{}, {}, {}] Can't drop empty click stack", slotId, actionType, dropItemAction);
             return null; // can't drop if clickStack is empty
         }
-        // todo: fix for hashed stacks
         final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
 
-//        switch (dropItemAction) {
-//            case DROP_FROM_SELECTED -> // drop 1 item from the selected slot
-//                changedSlots.put(
-//                    slotId,
-//                    clickStack.getAmount() == 1
-//                        ? Container.EMPTY_STACK
-//                        : new ItemStack(clickStack.getId(), clickStack.getAmount() - 1, clickStack.getDataComponents()));
-//            case DROP_SELECTED_STACK -> // drop the entire stack from the selected slot
-//                changedSlots.put(slotId, Container.EMPTY_STACK);
-//            default -> {
-//                CLIENT_LOG.debug("[{}, {}, {}] Unhandled drop item action", slotId, actionType, dropItemAction);
-//                return null;
-//            }
-//        }
+        switch (dropItemAction) {
+            case DROP_FROM_SELECTED -> // drop 1 item from the selected slot
+                changedSlots.put(
+                    slotId,
+                    ItemStackHasher.hash(
+                        clickStack.getAmount() == 1
+                            ? Container.EMPTY_STACK
+                            : new ItemStack(clickStack.getId(), clickStack.getAmount() - 1, clickStack.getDataComponents())));
+            case DROP_SELECTED_STACK -> // drop the entire stack from the selected slot
+                changedSlots.put(slotId, ItemStackHasher.hash(Container.EMPTY_STACK));
+            default -> {
+                CLIENT_LOG.debug("[{}, {}, {}] Unhandled drop item action", slotId, actionType, dropItemAction);
+                return null;
+            }
+        }
         return new ServerboundContainerClickPacket(
             containerId,
             CACHE.getPlayerCache().getActionId().incrementAndGet(),
             slotId,
             actionType,
             dropItemAction,
-            null,
-//            Container.EMPTY_STACK,
+            ItemStackHasher.hash(Container.EMPTY_STACK),
             changedSlots
         );
     }
