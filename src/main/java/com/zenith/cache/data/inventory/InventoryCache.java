@@ -14,7 +14,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.jspecify.annotations.Nullable;
 
 import static com.zenith.Globals.CACHE_LOG;
-import static com.zenith.Globals.CLIENT_LOG;
 
 @Data
 public class InventoryCache {
@@ -112,7 +111,6 @@ public class InventoryCache {
     }
 
     public void handleContainerClick(ServerboundContainerClickPacket packet) {
-        CLIENT_LOG.info("{}", packet);
         var container = containers.get(packet.getContainerId());
         if (container == containers.defaultReturnValue()) {
             CACHE_LOG.debug("Attempted to click in unknown container {}", packet.getContainerId());

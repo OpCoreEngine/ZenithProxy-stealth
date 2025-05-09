@@ -256,7 +256,7 @@ public class DataComponentHashers {
         try {
             return hasher(component).hash(value, new MinecraftHashEncoder());
         } catch (Exception exception) {
-            DEFAULT_LOG.error("Failed to hash item data component " + component.getKey() + " with value " + value + "!");
+            DEFAULT_LOG.error("Failed to hash item data component {} with value {}!", component.getKey(), value);
             throw exception;
         }
     }
