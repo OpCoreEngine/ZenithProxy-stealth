@@ -520,6 +520,10 @@ public class CoordObfuscation extends Module {
             valid = false;
         }
 
+        // todo: remove after implementing
+        invalidReasons.add("1.21.5 item component obfuscation is not implemented yet. Items like beehives and recovery compasses may leak coords. Downgrade release channel to 1.21.0: `channel set <linux/java> 1.21.0`");
+        valid = false;
+
         return new ValidationResult(valid, invalidReasons);
     }
 }
