@@ -23,8 +23,8 @@ import static com.zenith.Globals.CLIENT_LOG;
 public class MoveToHotbarSlot implements InventoryAction {
     private final int containerId;
     private final int slotId;
-    private final ContainerActionType actionType = ContainerActionType.MOVE_TO_HOTBAR_SLOT;
     private final MoveToHotbarAction moveToHotbarAction;
+    private static final ContainerActionType containerActionType = ContainerActionType.MOVE_TO_HOTBAR_SLOT;
 
     public MoveToHotbarSlot(final int slotId, final MoveToHotbarAction moveToHotbarAction) {
         this(0, slotId, moveToHotbarAction);
@@ -35,12 +35,12 @@ public class MoveToHotbarSlot implements InventoryAction {
         var container = CACHE.getPlayerCache().getInventoryCache().getOpenContainer();
         var mouseStack = CACHE.getPlayerCache().getInventoryCache().getMouseStack();
         if (!isStackEmpty(mouseStack)) {
-            CLIENT_LOG.debug("[{}, {}, {}] Can't move to hotbar, mouse stack is not empty", slotId, actionType, moveToHotbarAction);
+            CLIENT_LOG.debug("Can't move to hotbar, mouse stack is not empty: {}", this);
             return null; // can't swap if mouse stack is not empty
         }
         final ItemStack clickStack = container.getItemStack(slotId);
         if (isStackEmpty(clickStack)) {
-            CLIENT_LOG.debug("[{}, {}, {}] Can't swap empty stack", slotId, actionType, moveToHotbarAction);
+            CLIENT_LOG.debug("{} Can't swap empty stack", this);
             return null; // can't swap if clickStack is empty
         }
         final Int2ObjectMap<@Nullable HashedStack> changedSlots = new Int2ObjectArrayMap<>();
@@ -55,7 +55,7 @@ public class MoveToHotbarSlot implements InventoryAction {
                 if (playerInv) hotBarSlot = 45;
             }
             default -> {
-                CLIENT_LOG.debug("[{}, {}, {}] Unhandled action param", slotId, actionType, moveToHotbarAction);
+                CLIENT_LOG.debug("Unhandled action param: {}", this);
                 return null;
             }
         }
@@ -74,7 +74,7 @@ public class MoveToHotbarSlot implements InventoryAction {
             containerId,
             CACHE.getPlayerCache().getActionId().incrementAndGet(),
             slotId,
-            actionType,
+            containerActionType,
             moveToHotbarAction,
             ItemStackHasher.hash(Container.EMPTY_STACK),
             changedSlots

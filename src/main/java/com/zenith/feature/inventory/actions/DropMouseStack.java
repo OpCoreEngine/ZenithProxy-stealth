@@ -18,8 +18,8 @@ import static com.zenith.Globals.CLIENT_LOG;
 @RequiredArgsConstructor
 public class DropMouseStack implements InventoryAction {
     private final int containerId;
-    private final ContainerActionType actionType = ContainerActionType.CLICK_ITEM;
     private final ClickItemAction clickItemAction;
+    private static final ContainerActionType containerActionType = ContainerActionType.CLICK_ITEM;
 
     public DropMouseStack(final ClickItemAction clickItemAction) {
         this(0, clickItemAction);
@@ -29,7 +29,7 @@ public class DropMouseStack implements InventoryAction {
     public MinecraftPacket packet() {
         var mouseStack = CACHE.getPlayerCache().getInventoryCache().getMouseStack();
         if (isStackEmpty(mouseStack)) {
-            CLIENT_LOG.debug("[{}] [{}, {}] Can't drop empty mouse stack", type(), actionType, clickItemAction);
+            CLIENT_LOG.debug("Can't drop empty mouse stack: {}", this);
             return null; // can't drop if mouse stack is empty
         }
         ItemStack predictedMouseStack = Container.EMPTY_STACK;
@@ -45,7 +45,7 @@ public class DropMouseStack implements InventoryAction {
             containerId,
             CACHE.getPlayerCache().getActionId().incrementAndGet(),
             -999,
-            actionType,
+            containerActionType,
             clickItemAction,
             ItemStackHasher.hash(predictedMouseStack),
             Int2ObjectMaps.emptyMap()
