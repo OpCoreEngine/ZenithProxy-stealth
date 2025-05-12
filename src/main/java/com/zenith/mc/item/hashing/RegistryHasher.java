@@ -83,7 +83,7 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
 
     RegistryHasher<?> ATTRIBUTE = enumIdRegistry(AttributeType.Builtin.values(), AttributeType::getIdentifier);
 
-    MinecraftHasher<DataComponentType<?>> DATA_COMPONENT_TYPE = KEY.cast(DataComponentType::getKey);
+    MinecraftHasher<DataComponentType<?>> DATA_COMPONENT_TYPE = KYORI_KEY.cast(DataComponentType::getKey);
 
     // Mob effects can both be an enum constant or ID in MCPL.
     MinecraftHasher<Effect> EFFECT = enumRegistry();
@@ -190,8 +190,8 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
     // Widely used Minecraft types
 
     @SuppressWarnings({"unchecked", "rawtypes"}) // Java generics :(
-    MinecraftHasher<DataComponent<?, ?>> DATA_COMPONENT_KEY = MinecraftHasher.either(KEY,
-        component -> component.getValue() == null ? null : component.getType().getKey(), KEY_REMOVAL, component -> component.getType().getKey());
+    MinecraftHasher<DataComponent<?, ?>> DATA_COMPONENT_KEY = MinecraftHasher.either(KYORI_KEY,
+        component -> component.getValue() == null ? null : component.getType().getKey(), KYORI_KEY_REMOVAL, component -> component.getType().getKey());
 
     @SuppressWarnings({"unchecked", "rawtypes"}) // Java generics :(
     MinecraftHasher<DataComponent<?, ?>> DATA_COMPONENT_VALUE = (component, encoder) -> {
