@@ -129,6 +129,7 @@ public final class Config {
             public boolean prioStatusChangeMention = true;
             public boolean killMessage = true;
             public boolean logChatMessages = true;
+            public boolean logOnlyQueuePositionUpdates = true;
             public final CoordObfuscation coordObfuscation = new CoordObfuscation();
             public final ActionLimiter actionLimiter = new ActionLimiter();
             public final VisualRange visualRange = new VisualRange();
@@ -188,6 +189,9 @@ public final class Config {
 
             public static class SessionTimeLimit {
                 public boolean enabled = true;
+                public boolean ingameNotification = true;
+                public boolean discordNotification = false;
+                public boolean discordNotificationMention = true;
                 public boolean dynamic2b2tSessionTimeLimit = true;
             }
 
