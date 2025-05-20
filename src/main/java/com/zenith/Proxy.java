@@ -443,7 +443,10 @@ public class Proxy {
             throw new IllegalStateException("Server already started!");
         if (!CONFIG.server.enabled) return;
         try (InputStream in = getClass().getClassLoader().getResourceAsStream("servericon.png")) {
-            this.serverIcon = in.readAllBytes();
+            byte[] iconBytes = in.readAllBytes();
+            var event = new ServerIconBuildEvent(iconBytes);
+            EVENT_BUS.post(event);
+            this.serverIcon = event.getIcon();
         }
         var address = CONFIG.server.bind.address;
         var port = CONFIG.server.bind.port;
@@ -501,7 +504,12 @@ public class Proxy {
                 CLIENT_LOG.error("Login failed", e);
                 if (e instanceof MinecraftRequestException mre) {
                     if (mre.getResponse().getStatusCode() == 404) {
-                        AUTH_LOG.error("[Help] Log into the account with the vanilla MC launcher and join a server. Then try again with ZenithProxy.");
+                        AUTH_LOG.error("""
+                          [Help]
+                          Log into the account with the vanilla MC launcher and join a server. Then try again with ZenithProxy.
+                          
+                          Another possible cause is your microsoft account needs to have a password set. Meaning are using email codes to log in instead of passwords.
+                          """);
                     }
                 }
                 return null;
