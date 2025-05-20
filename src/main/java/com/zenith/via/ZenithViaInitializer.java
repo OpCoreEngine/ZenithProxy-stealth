@@ -33,7 +33,6 @@ public class ZenithViaInitializer {
     }
 
     public void clientViaChannelInitializer(Channel channel) {
-        if (true) return;
         if (!CONFIG.client.viaversion.enabled) return;
         if (CONFIG.client.viaversion.autoProtocolVersion) updateClientViaProtocolVersion();
         if (CONFIG.client.viaversion.protocolVersion == MinecraftCodec.CODEC.getProtocolVersion()) {
@@ -52,7 +51,6 @@ public class ZenithViaInitializer {
     public static final AttributeKey<UserConnectionImpl> VIA_USER = AttributeKey.newInstance("ViaUser");
 
     public void serverViaChannelInitializer(final Channel channel) {
-        if (true) return;
         if (!CONFIG.server.viaversion.enabled) return;
         init();
         var userConnection = new UserConnectionImpl(channel, false);
