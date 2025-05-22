@@ -87,6 +87,9 @@ public class ReplayRecording implements Closeable {
     // Start recording while we already have a logged in session
     private synchronized void lateStartRecording() {
         writePacket0(0, new ClientboundLoginFinishedPacket(CACHE.getProfileCache().getProfile()), Proxy.getInstance().getClient(), ProtocolState.LOGIN);
+        CACHE.getRegistriesCache().getRegistryPackets(
+            packet -> writePacket0(System.currentTimeMillis(), (MinecraftPacket) packet, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
+            Proxy.getInstance().getClient());
         CACHE.getConfigurationCache().getPackets(
             packet -> writePacket0(System.currentTimeMillis(), (MinecraftPacket) packet, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
             Proxy.getInstance().getClient());
@@ -233,6 +236,9 @@ public class ReplayRecording implements Closeable {
             recordSelfSpawn = true;
             if (preConnectSyncNeeded) {
                 writeToFile(0, new ClientboundLoginFinishedPacket(CACHE.getProfileCache().getProfile()), session, ProtocolState.LOGIN);
+                CACHE.getRegistriesCache().getRegistryPackets(
+                    packet2 -> writeToFile(System.currentTimeMillis(), (MinecraftPacket) packet2, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
+                    Proxy.getInstance().getClient());
                 CACHE.getConfigurationCache().getPackets(
                     packet2 -> writeToFile(System.currentTimeMillis(), (MinecraftPacket) packet2, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
                     Proxy.getInstance().getClient());

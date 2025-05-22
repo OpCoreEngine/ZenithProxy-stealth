@@ -28,6 +28,7 @@ package com.zenith.mc.item.hashing;
 import com.google.common.hash.HashCode;
 import com.viaversion.nbt.io.MNBTIO;
 import com.viaversion.nbt.tag.CompoundTag;
+import com.zenith.mc.DynamicRegistry;
 import com.zenith.mc.Registry;
 import com.zenith.mc.block.BlockRegistry;
 import com.zenith.mc.enchantment.EnchantmentRegistry;
@@ -79,7 +80,7 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
 
     RegistryHasher<?> ENTITY_TYPE = enumIdRegistry(EntityType.values());
 
-    RegistryHasher<?> ENCHANTMENT = registry(EnchantmentRegistry.REGISTRY);
+    RegistryHasher<?> ENCHANTMENT = dynamicRegistry(EnchantmentRegistry.REGISTRY);
 
     RegistryHasher<?> ATTRIBUTE = enumIdRegistry(AttributeType.Builtin.values(), AttributeType::getIdentifier);
 
@@ -323,6 +324,11 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
      * @param registry the registry to create a hasher for.
      */
     static RegistryHasher<?> registry(Registry<?> registry) {
+        MinecraftHasher<Integer> hasher = KEY.cast(id -> registry.get(id).name());
+        return hasher::hash;
+    }
+
+    static RegistryHasher<?> dynamicRegistry(DynamicRegistry<?> registry) {
         MinecraftHasher<Integer> hasher = KEY.cast(id -> registry.get(id).name());
         return hasher::hash;
     }
