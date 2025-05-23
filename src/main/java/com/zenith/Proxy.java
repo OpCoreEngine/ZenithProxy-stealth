@@ -25,6 +25,7 @@ import com.zenith.network.client.ClientSession;
 import com.zenith.network.server.LanBroadcaster;
 import com.zenith.network.server.ProxyServerListener;
 import com.zenith.network.server.ServerSession;
+import com.zenith.util.ImageInfo;
 import com.zenith.util.Wait;
 import com.zenith.util.struct.FastArrayList;
 import com.zenith.via.ZenithClientChannelInitializer;
@@ -138,13 +139,20 @@ public class Proxy {
             DEFAULT_LOG.warn("Detected unofficial ZenithProxy development build!");
         } else if (!LAUNCH_CONFIG.version.split("\\+")[0].equals(exeReleaseVersion.split("\\+")[0])) {
             DEFAULT_LOG.warn("launch_config.json version: {} and embedded ZenithProxy version: {} do not match!", LAUNCH_CONFIG.version, exeReleaseVersion);
-            if (LAUNCH_CONFIG.auto_update)
+            if (inDevEnv() && !ImageInfo.inImageRuntimeCode()) {
+                var correctedVersion = exeReleaseVersion.split("\\+")[0] + "+java." + exeReleaseVersion.split("\\+")[1];
+                LAUNCH_CONFIG.version = correctedVersion;
+                LAUNCH_CONFIG.local_version = correctedVersion;
+                saveLaunchConfig();
+                DEFAULT_LOG.warn("Updated version to match embedded ZenithProxy version: {}", exeReleaseVersion);
+            } else if (LAUNCH_CONFIG.auto_update && !inDevEnv()) {
                 DEFAULT_LOG.warn("AutoUpdater is enabled but will break!");
+            }
             DEFAULT_LOG.warn("Use the official launcher: https://github.com/rfresh2/ZenithProxy/releases/tag/launcher-v3");
         }
         initEventHandlers();
         try {
-            if (System.getenv("ZENITH_DEV") != null) CONFIG.debug.debugLogs = true;
+            if (inDevEnv()) CONFIG.debug.debugLogs = true;
             if (CONFIG.debug.clearOldLogs) EXECUTOR.schedule(Proxy::clearOldLogs, 10L, TimeUnit.SECONDS);
             if (CONFIG.interactiveTerminal.enable) TERMINAL.start();
             MODULE.init();
@@ -192,7 +200,7 @@ public class Proxy {
                     connected = true;
                 }
             }
-            if (LAUNCH_CONFIG.auto_update && System.getenv("ZENITH_DEV") == null) {
+            if (LAUNCH_CONFIG.auto_update && !inDevEnv()) {
                 autoUpdater = LAUNCH_CONFIG.release_channel.equals("git")
                     ? NoOpAutoUpdater.INSTANCE
                     : new RestAutoUpdater();
