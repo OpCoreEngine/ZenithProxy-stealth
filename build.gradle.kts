@@ -228,6 +228,7 @@ graalvmNative {
                 "--initialize-at-build-time=org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType",
                 "--initialize-at-build-time=org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType",
                 "--initialize-at-build-time=it.unimi.dsi.fastutil",
+                "--initialize-at-build-time=com.google.common.collect",
                 "--initialize-at-build-time=com.zenith.mc",
                 "--initialize-at-run-time=com.zenith.mc.item.hashing",
                 "--initialize-at-run-time=com.zenith.mc.chat_type",

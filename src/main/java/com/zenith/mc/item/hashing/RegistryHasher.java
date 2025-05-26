@@ -63,7 +63,7 @@ import static com.zenith.Globals.CLIENT_LOG;
  * <p>The {@link DirectType} parameter is only used for registry hashers that are able to encode {@link Holder}s, and must be left as a {@code ?} if this functionality is not in use. This makes it clear the hasher is not
  * supposed to be able to encode holders.</p>
  *
- * <p>To create a hasher that can encode a {@link Holder}, a direct hasher should be created that hashes a {@link DirectType} (in case of a custom holder), and {@link RegistryHasher#registry(JavaRegistryKey, MinecraftHasher)}
+ * <p>To create a hasher that can encode a {@link Holder}, a direct hasher should be created that hashes a {@link DirectType} (in case of a custom holder), and {@link RegistryHasher#registry(Registry, MinecraftHasher)}
  * should be used to create the registry hasher. {@link RegistryHasher#holder()} can then be used to obtain a hasher that encodes a holder of {@link DirectType}.</p>
  *
  * <p>Along with {@link RegistryHasher}s, this class also contains a bunch of hashers for various Minecraft objects. For organisational purposes, these are grouped in various sections with comments.</p>
@@ -318,8 +318,9 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
         .accept("ticks_in_hive", INT, BeehiveOccupant::getTicksInHive)
         .accept("min_ticks_in_hive", INT, BeehiveOccupant::getMinTicksInHive));
 
+
     /**
-     * Creates a hasher that encodes network IDs using {@link RegistryHasher#registry(JavaRegistryKey)}, and is also able to encode {@link Holder}s by using the {@code directHasher}.
+     * Creates a hasher that encodes registry IDs, and is also able to encode {@link Holder}s by using the {@code directHasher}.
      *
      * @param registry the registry to create a hasher for.
      */
@@ -328,6 +329,11 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
         return hasher::hash;
     }
 
+    /**
+     * Creates a hasher that encodes registry IDs, and is also able to encode {@link Holder}s by using the {@code directHasher}.
+     *
+     * @param registry the registry to create a hasher for.
+     */
     static RegistryHasher<?> dynamicRegistry(DynamicRegistry<?> registry) {
         MinecraftHasher<Integer> hasher = KEY.cast(id -> registry.get(id).name());
         return hasher::hash;
@@ -350,7 +356,7 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
 
     /**
      * Creates a hasher that encodes a {@link Holder} of {@link DirectType}. If the holder has an ID, the {@link RegistryHasher} is used to encode it. If the holder is custom,
-     * a direct hasher specified in {@link RegistryHasher#registry(JavaRegistryKey, MinecraftHasher)} is used to encode it.
+     * a direct hasher specified in {@link RegistryHasher#registry(Registry, MinecraftHasher)} is used to encode it.
      *
      * <p>This method can only be used if this hasher has a direct hasher attached to it. That is only the case if {@link DirectType} is not {@code ?}. If this hasher doesn't have
      * a direct hasher, a {@link IllegalStateException} will be thrown upon use.</p>
