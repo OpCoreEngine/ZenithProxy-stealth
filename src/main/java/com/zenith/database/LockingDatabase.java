@@ -98,8 +98,10 @@ public abstract class LockingDatabase extends Database {
             if (nonNull(lockExecutorService)) {
                 try {
                     lockExecutorService.submit(() -> {
-                        releaseLock();
-                        onLockReleased();
+                        if (hasLock() || lockAcquired.get()) {
+                            releaseLock();
+                            onLockReleased();
+                        }
                     }, true).get(5, TimeUnit.SECONDS);
                 } catch (final Exception e) {
                     DATABASE_LOG.warn("Failed releasing lock", e);
@@ -128,9 +130,9 @@ public abstract class LockingDatabase extends Database {
         DATABASE_LOG.info("{} Database Lock Released", getLockKey());
         if (nonNull(queryExecutorFuture)) {
             queryExecutorFuture.cancel(true);
-            writeLockReleasedMetadata();
             Wait.waitUntil(() -> queryExecutorFuture.isDone(), 5);
         }
+        writeLockReleasedMetadata();
     }
 
     private void writeLockAcquiredMetadata() {
@@ -245,8 +247,10 @@ public abstract class LockingDatabase extends Database {
         } catch (final Throwable e) {
             DATABASE_LOG.warn("Try lock process exception", e);
             try {
-                releaseLock();
-                onLockReleased();
+                if (hasLock() || lockAcquired.get()) {
+                    releaseLock();
+                    onLockReleased();
+                }
             } catch (final Exception e2) {
                 DATABASE_LOG.error("Error releasing lock in try lock process exception", e2);
             }
