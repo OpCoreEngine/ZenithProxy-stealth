@@ -2,6 +2,7 @@ package com.zenith.util.config;
 
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
+import com.zenith.feature.chatschema.ChatSchema;
 import com.zenith.feature.whitelist.PlayerEntry;
 import com.zenith.module.impl.ActiveHours.ActiveTime;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
@@ -11,6 +12,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 
 public final class Config {
@@ -75,6 +77,11 @@ public final class Config {
         public final ChatSigning chatSigning = new ChatSigning();
         public final Extra extra = new Extra();
         public final Inventory inventory = new Inventory();
+        public final ChatSchemas chatSchemas = new ChatSchemas();
+
+        public static final class ChatSchemas {
+            public LinkedHashMap<String, ChatSchema> serverSchemas = new LinkedHashMap<>();
+        }
 
         public static final class Inventory {
             public int actionDelayTicks = 5;
@@ -85,6 +92,7 @@ public final class Config {
 
         public static final class ChatSigning {
             public boolean enabled = true;
+            public boolean force = false;
         }
 
         public static final class ClientViaVersion {
@@ -250,6 +258,7 @@ public final class Config {
                 public boolean leaveAlert = true;
                 public boolean logoutAlert = true;
                 public boolean enterWhisper = false;
+                public String enterWhisperCommand = "msg";
                 public String enterWhisperMessage = "Hello, I am using ZenithProxy! I have alerted my owner that you are here!";
                 public int enterWhisperCooldownSeconds = 30;
                 public boolean enterWhisperWhilePlayerConnected = false;
