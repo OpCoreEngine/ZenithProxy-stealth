@@ -230,6 +230,7 @@ graalvmNative {
                 "--initialize-at-build-time=it.unimi.dsi.fastutil",
                 "--initialize-at-build-time=com.google.common.collect",
                 "--initialize-at-build-time=com.zenith.mc",
+                "--initialize-at-run-time=com.zenith.mc.item.hashing",
                 "--initialize-at-run-time=com.zenith.mc.chat_type",
                 "--initialize-at-run-time=sun.net.dns.ResolverConfigurationImpl", // fix for windows builds, exception when doing srv lookups with netty
             )
