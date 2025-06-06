@@ -90,7 +90,7 @@ public class ReplayRecording implements Closeable {
         CACHE.getRegistriesCache().getRegistryPackets(
             packet -> writePacket0(System.currentTimeMillis(), (MinecraftPacket) packet, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
             Proxy.getInstance().getClient());
-        CACHE.getConfigurationCache().getPackets(
+        CACHE.getConfigurationCache().getConfigurationPackets(
             packet -> writePacket0(System.currentTimeMillis(), (MinecraftPacket) packet, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
             Proxy.getInstance().getClient());
         writePacket0(System.currentTimeMillis(), new ClientboundCustomPayloadPacket(Key.key("minecraft:brand"), CACHE.getChunkCache().getServerBrand()), Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION);
@@ -239,7 +239,7 @@ public class ReplayRecording implements Closeable {
                 CACHE.getRegistriesCache().getRegistryPackets(
                     packet2 -> writeToFile(System.currentTimeMillis(), (MinecraftPacket) packet2, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
                     Proxy.getInstance().getClient());
-                CACHE.getConfigurationCache().getPackets(
+                CACHE.getConfigurationCache().getConfigurationPackets(
                     packet2 -> writeToFile(System.currentTimeMillis(), (MinecraftPacket) packet2, Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION),
                     Proxy.getInstance().getClient());
                 writeToFile(System.currentTimeMillis(), new ClientboundCustomPayloadPacket(Key.key("minecraft:brand"), CACHE.getChunkCache().getServerBrand()), Proxy.getInstance().getClient(), ProtocolState.CONFIGURATION);
