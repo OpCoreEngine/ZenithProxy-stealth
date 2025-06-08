@@ -10,6 +10,7 @@ import com.zenith.cache.data.inventory.Container;
 import com.zenith.cache.data.inventory.InventoryCache;
 import com.zenith.network.server.ServerSession;
 import com.zenith.util.math.MutableVec3i;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +41,10 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.Clien
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
 import org.jspecify.annotations.NonNull;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -172,7 +176,7 @@ public class PlayerCache implements CachedData {
                     CreativeGrabAction.GRAB,
                     // todo: fix
                     null,
-                    Collections.emptyMap()
+                    Int2ObjectMaps.emptyMap()
                 ));
             } catch (final Exception e) {
                 CLIENT_LOG.warn("Failed Player Sync", e);
