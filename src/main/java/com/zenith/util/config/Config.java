@@ -426,6 +426,7 @@ public final class Config {
                     public boolean autoClientDisconnect = false;
                     public int health = 5;
                     public boolean thunder = false;
+                    public boolean night = false;
                     public boolean cancelAutoReconnect = true;
                     // checks friends list, whitelist, and spectator whitelist
                     public boolean onUnknownPlayerInVisualRange = false;

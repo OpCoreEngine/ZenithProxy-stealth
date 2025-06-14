@@ -23,6 +23,7 @@ public class AutoDisconnect extends Module {
         return List.of(
             of(PlayerHealthChangedEvent.class, this::handleLowPlayerHealthEvent),
             of(WeatherChangeEvent.class, this::handleWeatherChangeEvent),
+            of(DayTimeChangedEvent.class, this::handleDayTimeChangedEvent),
             of(PlayerDisconnectedEvent.class, this::handleProxyClientDisconnectedEvent),
             of(ServerPlayerInVisualRangeEvent.class, this::handleNewPlayerInVisualRangeEvent),
             of(TotemPopEvent.class, this::handleTotemPopEvent)
@@ -53,6 +54,16 @@ public class AutoDisconnect extends Module {
             && playerConnectedCheck()) {
             info("Thunder disconnect");
             doDisconnect("Thunder");
+        }
+    }
+
+    public void handleDayTimeChangedEvent(final DayTimeChangedEvent event) {
+        if (!CONFIG.client.extra.utility.actions.autoDisconnect.night) return;
+        final long dayCycleTime = CACHE.getChunkCache().getWorldTimeData().getDayTime() % 24000;
+        final boolean isDay = ((dayCycleTime <= 13000) || dayCycleTime > 23000);
+        if (!isDay && playerConnectedCheck()) {
+            info("Night disconnect");
+            doDisconnect("Night");
         }
     }
 
