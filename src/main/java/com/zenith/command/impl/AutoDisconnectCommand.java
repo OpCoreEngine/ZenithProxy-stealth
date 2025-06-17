@@ -44,7 +44,6 @@ public class AutoDisconnectCommand extends Command {
                 "health on/off",
                 "health <integer>",
                 "thunder on/off",
-                "night on/off",
                 "unknownPlayer on/off",
                 "totemPop on/off",
                 "whilePlayerConnected on/off",
@@ -101,13 +100,6 @@ public class AutoDisconnectCommand extends Command {
                                 .title("AutoDisconnect Thunder " + toggleStrCaps(CONFIG.client.extra.utility.actions.autoDisconnect.thunder));
                             return OK;
                       })))
-            .then(literal("night")
-                      .then(argument("toggle", toggle()).executes(c -> {
-                            CONFIG.client.extra.utility.actions.autoDisconnect.night = getToggle(c, "toggle");
-                            c.getSource().getEmbed()
-                                .title("AutoDisconnect Night " + toggleStrCaps(CONFIG.client.extra.utility.actions.autoDisconnect.thunder));
-                            return OK;
-                      })))
             .then(literal("unknownPlayer")
                       .then(argument("toggle", toggle()).executes(c -> {
                           CONFIG.client.extra.utility.actions.autoDisconnect.onUnknownPlayerInVisualRange = getToggle(c, "toggle");
@@ -138,7 +130,6 @@ public class AutoDisconnectCommand extends Command {
             .addField("Health Disconnect", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.healthDisconnect), false)
             .addField("Health Level", CONFIG.client.extra.utility.actions.autoDisconnect.health, false)
             .addField("Thunder", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.thunder), false)
-            .addField("Night", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.night), false)
             .addField("Unknown Player", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.onUnknownPlayerInVisualRange), false)
             .addField("Totem Pop", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.onTotemPop), false)
             .addField("While Player Connected", toggleStr(CONFIG.client.extra.utility.actions.autoDisconnect.whilePlayerConnected), false)
