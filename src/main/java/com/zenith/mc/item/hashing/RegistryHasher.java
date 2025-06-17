@@ -156,6 +156,7 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
 
     RegistryHasher<?> FROG_VARIANT = enumIdRegistry(FrogVariants.values());
 
+    // todo: changed in 1.21.6 to use a network synced registry
     MinecraftHasher<PaintingVariant> DIRECT_PAINTING_VARIANT = MinecraftHasher.mapBuilder(builder -> builder
         .accept("width", INT, PaintingVariant::width)
         .accept("height", INT, PaintingVariant::height)
@@ -253,14 +254,24 @@ public interface RegistryHasher<DirectType> extends MinecraftHasher<Integer> {
 
     // Encode as a single element if the list only has one element
     MinecraftHasher<AdventureModePredicate> ADVENTURE_MODE_PREDICATE = MinecraftHasher.either(BLOCK_PREDICATE,
-                                                                                              predicate -> predicate.getPredicates().size() == 1 ? predicate.getPredicates().get(0) : null, BLOCK_PREDICATE.list(), AdventureModePredicate::getPredicates);
+        predicate -> predicate.getPredicates().size() == 1 ? predicate.getPredicates().get(0) : null, BLOCK_PREDICATE.list(), AdventureModePredicate::getPredicates);
+
+    MinecraftHasher<ItemAttributeModifiers.DisplayType> ATTRIBUTE_MODIFIER_DISPLAY_TYPE = MinecraftHasher.fromEnum();
+
+    MinecraftHasher<ItemAttributeModifiers.Display> ATTRIBUTE_MODIFIER_DISPLAY = ATTRIBUTE_MODIFIER_DISPLAY_TYPE.dispatch(ItemAttributeModifiers.Display::getType,
+        displayType -> switch (displayType) {
+            case DEFAULT, HIDDEN -> MapBuilder.unit();
+            case OVERRIDE -> builder -> builder
+                .accept("value", ComponentHasher.COMPONENT, ItemAttributeModifiers.Display::getComponent);
+        });
 
     MinecraftHasher<ItemAttributeModifiers.Entry> ATTRIBUTE_MODIFIER_ENTRY = MinecraftHasher.mapBuilder(builder -> builder
         .accept("type", RegistryHasher.ATTRIBUTE, ItemAttributeModifiers.Entry::getAttribute)
         .accept("id", KEY, entry -> entry.getModifier().getId())
         .accept("amount", DOUBLE, entry -> entry.getModifier().getAmount())
         .accept("operation", ATTRIBUTE_MODIFIER_OPERATION, entry -> entry.getModifier().getOperation())
-        .optional("slot", EQUIPMENT_SLOT_GROUP, ItemAttributeModifiers.Entry::getSlot, ItemAttributeModifiers.EquipmentSlotGroup.ANY));
+        .optional("slot", EQUIPMENT_SLOT_GROUP, ItemAttributeModifiers.Entry::getSlot, ItemAttributeModifiers.EquipmentSlotGroup.ANY)
+        .optionalPredicate("display", ATTRIBUTE_MODIFIER_DISPLAY, ItemAttributeModifiers.Entry::getDisplay, display -> display.getType() != ItemAttributeModifiers.DisplayType.DEFAULT));
 
     MinecraftHasher<Consumable.ItemUseAnimation> ITEM_USE_ANIMATION = MinecraftHasher.fromEnum();
 

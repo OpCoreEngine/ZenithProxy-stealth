@@ -171,6 +171,7 @@ public class CoordObfuscation extends Module {
                 .outbound(ClientboundSetCursorItemPacket.class, new COSetCursorItemHandler())
                 .outbound(ClientboundSetPlayerInventoryPacket.class, new COSetPlayerInventoryHandler())
                 .outbound(ClientboundTestInstanceBlockStatus.class, (p, s) -> null)
+                .outbound(ClientboundTrackedWaypointPacket.class, new COTrackedWaypointsHandler())
                 .build())
             .build();
     }

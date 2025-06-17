@@ -21,6 +21,7 @@ import com.zenith.network.server.handler.shared.outgoing.SLoginFinishedOutgoingH
 import com.zenith.network.server.handler.shared.outgoing.ServerTablistDataOutgoingHandler;
 import com.zenith.network.server.handler.shared.postoutgoing.*;
 import com.zenith.network.server.handler.spectator.incoming.*;
+import com.zenith.network.server.handler.spectator.incoming.movement.PlayerInputSpectatorHandler;
 import com.zenith.network.server.handler.spectator.incoming.movement.PlayerPositionRotationSpectatorHandler;
 import com.zenith.network.server.handler.spectator.incoming.movement.PlayerPositionSpectatorHandler;
 import com.zenith.network.server.handler.spectator.incoming.movement.PlayerRotationSpectatorHandler;
@@ -52,6 +53,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCreativeModeSlotPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundAcceptTeleportationPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundPlayerInputPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundTeleportToEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.*;
@@ -151,6 +153,7 @@ public final class PacketCodecRegistries {
                 .inbound(ClientboundSetCursorItemPacket.class, new SetCursorItemHandler())
                 .inbound(ClientboundAwardStatsPacket.class, new AwardStatsHandler())
                 .inbound(ClientboundTabListPacket.class, new TabListDataHandler())
+                .inbound(ClientboundTrackedWaypointPacket.class, new TrackedWaypointHandler())
                 .inbound(ClientboundPlayerInfoUpdatePacket.class, new PlayerInfoUpdateHandler())
                 .inbound(ClientboundExplodePacket.class, new ExplodeHandler())
                 .inbound(ClientboundPlayerInfoRemovePacket.class, new PlayerInfoRemoveHandler())
@@ -206,6 +209,7 @@ public final class PacketCodecRegistries {
                 .postOutbound(ServerboundConfigurationAcknowledgedPacket.class, new PostOutgoingConfigurationAckHandler())
                 .postOutbound(ServerboundMoveVehiclePacket.class, new PostOutgoingMoveVehicleHandler())
                 .postOutbound(ServerboundPlayerCommandPacket.class, new PostOutgoingPlayerCommandHandler())
+                .postOutbound(ServerboundPlayerInputPacket.class, new PostOutgoingPlayerInputHandler())
                 .postOutbound(ServerboundSetCarriedItemPacket.class, new PostOutgoingSetCarriedItemHandler())
                 .postOutbound(ServerboundMovePlayerPosPacket.class, new PostOutgoingPlayerPositionHandler())
                 .postOutbound(ServerboundMovePlayerPosRotPacket.class, new PostOutgoingPlayerPositionRotationHandler())
@@ -245,6 +249,7 @@ public final class PacketCodecRegistries {
                 .inbound(ServerboundMovePlayerPosPacket.class, new PlayerPositionSpectatorHandler())
                 .inbound(ServerboundMovePlayerRotPacket.class, new PlayerRotationSpectatorHandler())
                 .inbound(ServerboundChatPacket.class, new ServerChatSpectatorHandler())
+                .inbound(ServerboundPlayerInputPacket.class, new PlayerInputSpectatorHandler())
                 .inbound(ServerboundPlayerCommandPacket.class, new PlayerCommandSpectatorHandler())
                 .inbound(ServerboundTeleportToEntityPacket.class, new TeleportToEntitySpectatorHandler())
                 .inbound(ServerboundInteractPacket.class, new InteractEntitySpectatorHandler())

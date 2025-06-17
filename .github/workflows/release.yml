@@ -1,9 +1,9 @@
-name: 1.21.5 Build and Release
+name: 1.21.6 Build and Release
 
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+\+1.21.5'
+      - '[0-9]+.[0-9]+.[0-9]+\+1.21.6'
 
 jobs:
   build-java-and-linux-amd64:

@@ -108,9 +108,6 @@ public final class Bot extends ModuleUtils {
     }
 
     private synchronized void handleClientTickStopped(final ClientBotTick.Stopped event) {
-        if (isSneaking) {
-            sendClientPacketAsync(new ServerboundPlayerCommandPacket(CACHE.getPlayerCache().getEntityId(), PlayerState.STOP_SNEAKING));
-        }
         if (isSprinting) {
             sendClientPacketAsync(new ServerboundPlayerCommandPacket(CACHE.getPlayerCache().getEntityId(), PlayerState.STOP_SPRINTING));
         }
@@ -308,11 +305,6 @@ public final class Bot extends ModuleUtils {
             //  need to determine if vehicle is a controllable type
         } else {
             // send movement packets based on position
-            if (wasSneaking != isSneaking) {
-                sendClientPacketAsync(new ServerboundPlayerCommandPacket(
-                    CACHE.getPlayerCache().getEntityId(),
-                    isSneaking ? PlayerState.START_SNEAKING : PlayerState.STOP_SNEAKING));
-            }
             if (lastSprinting != isSprinting) {
                 sendClientPacketAsync(new ServerboundPlayerCommandPacket(
                     CACHE.getPlayerCache().getEntityId(),

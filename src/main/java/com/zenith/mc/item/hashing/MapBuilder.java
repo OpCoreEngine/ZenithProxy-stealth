@@ -47,7 +47,7 @@ public interface MapBuilder<Type> extends UnaryOperator<MapHasher<Type>> {
      *
      * @param <Type> the type to encode.
      */
-    static <Type> MapBuilder<Type> empty() {
+    static <Type> MapBuilder<Type> unit() {
         return builder -> builder;
     }
 }

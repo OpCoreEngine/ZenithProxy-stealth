@@ -69,6 +69,61 @@ public class ComponentHasherTest {
         enchantsMap.put(0, 1);
 //        testHash(DataComponentTypes.ENCHANTMENTS, ItemEnchantments.builder().enchantments(enchantsMap).build(), 0); // TODO identifier lookup
 
+        // todo: broken because we don't store namespaced keys in zenith's hashers, assumes all are "minecraft:"
+//        testHash(DataComponentTypes.ATTRIBUTE_MODIFIERS,
+//            ItemAttributeModifiers.builder()
+//                .modifiers(List.of(
+//                    ItemAttributeModifiers.Entry.builder()
+//                        .attribute(AttributeType.Builtin.ATTACK_DAMAGE.getId())
+//                        .modifier(ItemAttributeModifiers.AttributeModifier.builder()
+//                            .id("test_modifier_1")
+//                            .amount(2.0)
+//                            .operation(ModifierOperation.ADD)
+//                            .build())
+//                        .slot(ItemAttributeModifiers.EquipmentSlotGroup.ANY)
+//                        .display(new ItemAttributeModifiers.Display(ItemAttributeModifiers.DisplayType.DEFAULT, null))
+//                        .build(),
+//                    ItemAttributeModifiers.Entry.builder()
+//                        .attribute(AttributeType.Builtin.JUMP_STRENGTH.getId())
+//                        .modifier(ItemAttributeModifiers.AttributeModifier.builder()
+//                            .id("test_modifier_2")
+//                            .amount(4.2)
+//                            .operation(ModifierOperation.ADD_MULTIPLIED_TOTAL)
+//                            .build())
+//                        .slot(ItemAttributeModifiers.EquipmentSlotGroup.HEAD)
+//                        .display(new ItemAttributeModifiers.Display(ItemAttributeModifiers.DisplayType.HIDDEN, null))
+//                        .build(),
+//                    ItemAttributeModifiers.Entry.builder()
+//                        .attribute(AttributeType.Builtin.WAYPOINT_RECEIVE_RANGE.getId())
+//                        .modifier(ItemAttributeModifiers.AttributeModifier.builder()
+//                            .id("geyser_mc:test_modifier_3")
+//                            .amount(5.4)
+//                            .operation(ModifierOperation.ADD_MULTIPLIED_BASE)
+//                            .build())
+//                        .slot(ItemAttributeModifiers.EquipmentSlotGroup.FEET)
+//                        .display(new ItemAttributeModifiers.Display(ItemAttributeModifiers.DisplayType.DEFAULT, null))
+//                        .build()
+//                ))
+//                .build()
+//            , 1889444548);
+//
+//        testHash(DataComponentTypes.ATTRIBUTE_MODIFIERS,
+//            ItemAttributeModifiers.builder()
+//                .modifiers(List.of(
+//                    ItemAttributeModifiers.Entry.builder()
+//                        .attribute(AttributeType.Builtin.WAYPOINT_TRANSMIT_RANGE.getId())
+//                        .modifier(ItemAttributeModifiers.AttributeModifier.builder()
+//                            .id("geyser_mc:test_modifier_4")
+//                            .amount(2.0)
+//                            .operation(ModifierOperation.ADD)
+//                            .build())
+//                        .slot(ItemAttributeModifiers.EquipmentSlotGroup.ANY)
+//                        .display(new ItemAttributeModifiers.Display(ItemAttributeModifiers.DisplayType.OVERRIDE, Component.text("give me a test")))
+//                        .build()
+//                ))
+//                .build()
+//            , 1375953017);
+
         testHash(DataComponentTypes.CUSTOM_MODEL_DATA,
                  new CustomModelData(List.of(5.0F, 3.0F, -1.0F), List.of(false, true, false), List.of("1", "3", "2"), List.of(3424, -123, 345)), 1947635619);
 
@@ -121,16 +176,25 @@ public class ComponentHasherTest {
         testHash(DataComponentTypes.ENCHANTABLE, 3, -1834983819);
 
         testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.BODY, BuiltinSound.ITEM_ARMOR_EQUIP_GENERIC, null, null, null,
-                                                               true, true, true, false), 1294431019);
+            true, true, true, false,
+            false, BuiltinSound.ITEM_SHEARS_SNIP), 1294431019);
         testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.BODY, BuiltinSound.ITEM_ARMOR_EQUIP_CHAIN, "testing", null, null,
-                                                               true, true, true, false), 1226203061);
+            true, true, true, false,
+            true, BuiltinSound.ITEM_BONE_MEAL_USE), -801616214);
+        // todo: broken for some reason
 //        testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.BODY, BuiltinSound.AMBIENT_CAVE, null, null, null,
-//                                                               false, true, false, false), 1416408052);
+//            false, true, false, false,
+//            false, new CustomSound("testing_equippable", false, 10.0F)), -1145684769);
 //        testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.BODY, BuiltinSound.ENTITY_BREEZE_WIND_BURST, null, "testing",
-//                                                               new HolderSet(new int[]{EntityType.ACACIA_BOAT.ordinal()}), false, true, false, false), 1711275245);
-
-//        testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.HELMET, BuiltinSound.ITEM_ARMOR_EQUIP_GENERIC, null, null, null,
-//                                                               true, true, true, false), 497790992); // TODO broken because equipment slot names don't match
+//            new HolderSet(new int[]{EntityType.ACACIA_BOAT.ordinal()}), false, true, false, false,
+//            true, BuiltinSound.BLOCK_NETHERITE_BLOCK_PLACE), -115079770);
+        testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.HELMET, BuiltinSound.ITEM_ARMOR_EQUIP_GENERIC, null, null, null,
+            true, true, true, false,
+            false, BuiltinSound.ITEM_SHEARS_SNIP), 497790992);
+        testHash(DataComponentTypes.EQUIPPABLE, new Equippable(EquipmentSlot.HELMET, BuiltinSound.ITEM_ARMOR_EQUIP_GENERIC, null, null,
+            new HolderSet("aquatic"),
+            true, true, true, false,
+            false, BuiltinSound.ITEM_SHEARS_SNIP), 264760955);
 
         testHash(DataComponentTypes.REPAIRABLE, new HolderSet(new int[]{ItemRegistry.AMETHYST_BLOCK.id(), ItemRegistry.PUMPKIN.id()}), -36715567);
 

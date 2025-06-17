@@ -155,6 +155,7 @@ public class BrigadierToMCProtocolLibConverter {
         return new CommandNode(
             commandType,
             isExecutable,
+            true,
             childrenIndeces,
             redirectIndex,
             name,

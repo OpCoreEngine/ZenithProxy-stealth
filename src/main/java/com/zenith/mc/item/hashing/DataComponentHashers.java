@@ -115,7 +115,9 @@ public class DataComponentHashers {
             .optional("dispensable", MinecraftHasher.BOOL, Equippable::dispensable, true)
             .optional("swappable", MinecraftHasher.BOOL, Equippable::dispensable, true)
             .optional("damage_on_hurt", MinecraftHasher.BOOL, Equippable::damageOnHurt, true)
-            .optional("equip_on_interact", MinecraftHasher.BOOL, Equippable::equipOnInteract, false));
+            .optional("equip_on_interact", MinecraftHasher.BOOL, Equippable::equipOnInteract, false)
+            .optional("can_be_sheared", MinecraftHasher.BOOL, Equippable::canBeSheared, false)
+            .optional("shearing_sound", RegistryHasher.SOUND_EVENT, Equippable::shearingSound, BuiltinSound.ITEM_SHEARS_SNIP));
         registerMap(DataComponentTypes.REPAIRABLE, builder -> builder
             .accept("items", RegistryHasher.ITEM.holderSet(), Function.identity()));
 
@@ -216,6 +218,8 @@ public class DataComponentHashers {
 //            .cast(holder -> holder.getOrCompute(id -> JavaRegistries.CHICKEN_VARIANT.keyFromNetworkId(id)))); // Why, Mojang?
         register(DataComponentTypes.FROG_VARIANT, RegistryHasher.FROG_VARIANT);
         register(DataComponentTypes.HORSE_VARIANT, RegistryHasher.HORSE_VARIANT);
+        // todo: painting uses registry id now in 1.21.6
+//        register(DataComponentTypes.PAINTING_VARIANT, RegistryHasher.PAINTING_VARIANT.cast(Holder::id)); // This can and will throw when a direct holder was received, which is still possible due to a bug in 1.21.6.
         register(DataComponentTypes.PAINTING_VARIANT, RegistryHasher.PAINTING_VARIANT);
         register(DataComponentTypes.LLAMA_VARIANT, RegistryHasher.LLAMA_VARIANT);
         register(DataComponentTypes.AXOLOTL_VARIANT, RegistryHasher.AXOLOTL_VARIANT);
