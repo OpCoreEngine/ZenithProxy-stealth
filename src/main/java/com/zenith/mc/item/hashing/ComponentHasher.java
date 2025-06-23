@@ -44,6 +44,7 @@ public interface ComponentHasher {
         case RUN_COMMAND, SUGGEST_COMMAND -> builder -> builder.accept("command", MinecraftHasher.STRING, ClickEvent::value);
         case CHANGE_PAGE -> builder -> builder.accept("page", MinecraftHasher.STRING, ClickEvent::value);
         case COPY_TO_CLIPBOARD -> builder -> builder.accept("value", MinecraftHasher.STRING, ClickEvent::value);
+        case CUSTOM,SHOW_DIALOG ->  builder -> builder.accept("value", MinecraftHasher.STRING, ClickEvent::value);
     });
 
     MinecraftHasher<HoverEvent.Action<?>> HOVER_EVENT_ACTION = MinecraftHasher.STRING.cast(HoverEvent.Action::toString);
