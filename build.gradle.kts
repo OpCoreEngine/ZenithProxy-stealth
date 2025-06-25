@@ -25,7 +25,7 @@ repositories {
     mavenLocal()
 }
 
-val mcplVersion = "1.21.6.1"
+val mcplVersion = "1.21.6.2"
 dependencies {
     api("com.github.rfresh2:JDA:5.6.14") {
         exclude(group = "club.minnced")
@@ -51,7 +51,7 @@ dependencies {
     api("io.netty:netty-resolver-dns-native-macos:$nettyVersion:osx-aarch_64")
     api("org.cloudburstmc.math:api:2.0")
     api("org.cloudburstmc.math:immutable:2.0")
-    api("org.redisson:redisson:3.49.0") {
+    api("org.redisson:redisson:3.50.0") {
         exclude(group = "io.netty")
     }
     api("com.github.rfresh2:SimpleEventBus:1.6")
@@ -65,9 +65,9 @@ dependencies {
     api("com.github.rfresh2.fastutil.maps:reference-object-maps:$fastutilVersion")
     api("com.github.rfresh2.fastutil.maps:long-double-maps:$fastutilVersion")
     api("com.github.rfresh2.fastutil.queues:int-queues:$fastutilVersion")
-    api("com.viaversion:vialoader:4.0.2")
-    api("com.viaversion:viaversion:5.3.2")
-    api("com.viaversion:viabackwards:5.3.2")
+    api("com.viaversion:vialoader:4.0.3")
+    api("com.viaversion:viaversion:5.4.0")
+    api("com.viaversion:viabackwards:5.4.0")
     api("org.jline:jline:3.30.4")
     api("org.jline:jline-terminal-jni:3.30.4")
     api("ar.com.hjg:pngj:2.1.0")
@@ -79,9 +79,9 @@ dependencies {
     api("org.slf4j:slf4j-api:2.0.17")
     api("org.slf4j:jul-to-slf4j:2.0.17")
     api("com.mojang:brigadier:1.3.10")
-    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.1")
     api("org.jspecify:jspecify:1.0.0")
-    api("net.kyori:adventure-text-logger-slf4j:4.21.0")
+    api("net.kyori:adventure-text-logger-slf4j:4.23.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     val lombokVersion = "1.18.38"
