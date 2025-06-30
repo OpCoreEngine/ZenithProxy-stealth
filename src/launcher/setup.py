@@ -1,11 +1,13 @@
 import json
 import os
+import random
 import re
 
 import requests
 
 from jdk_install import get_java_executable, JavaInstallType
 from launch_config import read_launch_config_file
+from launch_platform import get_public_ip, check_port_in_use
 from launch_platform import validate_linux_system
 from utils import critical_error
 
@@ -75,22 +77,6 @@ def setup_execute(config):
         print("")
 
     while True:
-        print("Select the port ZenithProxy will be hosted on.")
-        print("If you are unsure, just press enter to use 25565 by default.")
-        port = input("> ")
-        if port == "":
-            port = 25565
-            break
-        try:
-            port = int(port)
-            if port < 1 or port > 65535:
-                raise ValueError
-            break
-        except ValueError:
-            print("Invalid port number. Must be between 1 and 65535")
-    print("")
-
-    while True:
         print("Select the type of environment you are running ZenithProxy on.")
         print("1. PC or other computer in your home")
         print("2. VPS or server outside your home")
@@ -100,18 +86,56 @@ def setup_execute(config):
             break
         elif i1 == "2":
             print("Attempting to determine IP for players to connect to...")
-            response = requests.get("https://api.ipify.org", timeout=10)
-            if response.status_code == 200:
-                ip = response.content.decode()
+            ip = get_public_ip()
+            if ip is not None:
                 print("Found IP:", ip)
-                break
             else:
-                print("Failed to get IP:", response.status_code, response.reason)
                 ip = "localhost"
-                break
+            break
         else:
             print("Invalid input. Enter 1 or 2.")
     print("")
+
+    while True:
+        print("Select the port ZenithProxy will be hosted on.")
+        print("If you are unsure, press enter to select a random port.")
+        port = input("> ")
+        if port == "":
+            port = int(random.uniform(35000, 65000))
+            attempts = 0
+            while check_port_in_use(port) and attempts < 10:
+                port = int(random.uniform(35000, 65000))
+                attempts += 1
+            break
+        try:
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError
+            break
+        except ValueError:
+            print("Invalid port number. Must be between 1 and 65535")
+    print("Using port:", port)
+    print("")
+
+    upnp = False
+    if ip == "localhost":
+        while True:
+            print("Enable automatic port forwarding with UPnP (https://w.wiki/Ebjt)? (y/n)")
+            i1 = input("> ")
+            if i1 == "y":
+                upnp = True
+                print("Attempting to determine IP for players to connect to...")
+                public_ip = get_public_ip()
+                if public_ip is not None:
+                    ip = public_ip
+                    print("Found IP:", ip)
+                break
+            elif i1 == "n":
+                upnp = False
+                break
+            else:
+                print("Invalid input. Enter y or n")
+        print("")
 
     while True:
         print("Enable Discord bot? (y/n)")
@@ -207,6 +231,7 @@ def setup_execute(config):
             "port": port,
         },
         "proxyIP": proxy_address,
+        "upnp": upnp
     }
 
     if discord_bot:
