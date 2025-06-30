@@ -78,11 +78,11 @@ public final class FoodRegistry {
 
     public static final FoodData BEETROOT_SOUP = REGISTRY.register(new FoodData(1237, "beetroot_soup", 1, 6.0f, 86.4f, false, true));
 
-    public static final FoodData SUSPICIOUS_STEW = REGISTRY.register(new FoodData(1274, "suspicious_stew", 1, 6.0f, 86.4f, true, true));
+    public static final FoodData SUSPICIOUS_STEW = REGISTRY.register(new FoodData(1275, "suspicious_stew", 1, 6.0f, 86.4f, true, true));
 
-    public static final FoodData SWEET_BERRIES = REGISTRY.register(new FoodData(1299, "sweet_berries", 64, 2.0f, 1.6f, false, true));
+    public static final FoodData SWEET_BERRIES = REGISTRY.register(new FoodData(1300, "sweet_berries", 64, 2.0f, 1.6f, false, true));
 
-    public static final FoodData GLOW_BERRIES = REGISTRY.register(new FoodData(1300, "glow_berries", 64, 2.0f, 1.6f, false, true));
+    public static final FoodData GLOW_BERRIES = REGISTRY.register(new FoodData(1301, "glow_berries", 64, 2.0f, 1.6f, false, true));
 
-    public static final FoodData HONEY_BOTTLE = REGISTRY.register(new FoodData(1307, "honey_bottle", 16, 6.0f, 14.400001f, true, false));
+    public static final FoodData HONEY_BOTTLE = REGISTRY.register(new FoodData(1308, "honey_bottle", 16, 6.0f, 14.400001f, true, false));
 }
