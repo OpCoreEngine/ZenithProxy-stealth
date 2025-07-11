@@ -10,11 +10,13 @@ import com.zenith.mc.biome.Biome;
 import com.zenith.mc.biome.BiomeRegistry;
 import com.zenith.mc.chat_type.ChatType;
 import com.zenith.mc.chat_type.ChatTypeRegistry;
+import com.zenith.mc.damage_type.DamageType;
+import com.zenith.mc.damage_type.DamageTypeRegistry;
 import com.zenith.mc.dimension.DimensionData;
 import com.zenith.mc.dimension.DimensionRegistry;
 import com.zenith.mc.enchantment.EnchantmentData;
 import com.zenith.mc.enchantment.EnchantmentRegistry;
-import lombok.Getter;
+import lombok.Data;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.network.tcp.TcpSession;
 import org.geysermc.mcprotocollib.protocol.data.game.RegistryEntry;
@@ -30,10 +32,11 @@ import java.util.function.Consumer;
 import static com.zenith.Globals.CACHE_LOG;
 
 @NullMarked
+@Data
 public class RegistriesCache implements CachedData {
     // data directly as sent by the server
     // zenith's internal registry classes store a slimmed down version of select registry types
-    @Getter private final Map<String, List<RegistryEntry>> registryEntries = new ConcurrentHashMap<>();
+    private final Map<String, List<RegistryEntry>> registryEntries = new ConcurrentHashMap<>();
 
     public void initialize(String registryName, List<RegistryEntry> entries) {
         this.registryEntries.put(registryName, entries);
@@ -43,21 +46,31 @@ public class RegistriesCache implements CachedData {
                 case "minecraft:chat_type" -> initializeChatTypeRegistry(entries);
                 case "minecraft:enchantment" -> initializeEnchantmentRegistry(entries);
                 case "minecraft:worldgen/biome" -> initializeBiomeRegistry(entries);
-                case null, default -> {}
+                case "minecraft:damage_type" -> initializeDamageTypeRegistry(entries);
+                default -> {}
             }
         } catch (Exception e) {
             CACHE_LOG.error("Error initializing registry: {}", registryName, e);
         }
     }
 
+    private void initializeDamageTypeRegistry(final List<RegistryEntry> entries) {
+        Registry<DamageType> registry = new Registry<>(entries.size());
+        for (int i = 0; i < entries.size(); i++) {
+            var entry = entries.get(i);
+            String key = getKey(entry);
+            var damageType = new DamageType(i, key);
+            registry.register(damageType);
+        }
+        CACHE_LOG.debug("Loaded {} damage types", registry.size());
+        DamageTypeRegistry.REGISTRY.set(registry);
+    }
+
     private void initializeEnchantmentRegistry(final List<RegistryEntry> entries) {
         Registry<EnchantmentData> registry = new Registry<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final var entry = entries.get(i);
-            String key = entry.getId();
-            if (key.contains(":")) {
-                key = key.split(":")[1];
-            }
+            String key = getKey(entry);
             var enchantData = new EnchantmentData(i, key);
             registry.register(enchantData);
         }
@@ -69,10 +82,7 @@ public class RegistriesCache implements CachedData {
         Registry<DimensionData> registry = new Registry<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final var entry = entries.get(i);
-            String key = entry.getId();
-            if (key.contains(":")) {
-                key = key.split(":")[1];
-            }
+            String key = getKey(entry);
             if (entry.getData() == null) {
                 CACHE_LOG.error("Null data for dimension registry key: {}", key);
                 continue;
@@ -92,10 +102,7 @@ public class RegistriesCache implements CachedData {
         Registry<ChatType> registry = new Registry<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final var entry = entries.get(i);
-            String key = entry.getId();
-            if (key.contains(":")) {
-                key = key.split(":")[1];
-            }
+            String key = getKey(entry);
             if (entry.getData() == null) {
                 CACHE_LOG.error("Null data for chat type registry key: {}", key);
                 continue;
@@ -115,10 +122,7 @@ public class RegistriesCache implements CachedData {
         Registry<Biome> registry = new Registry<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final var entry = entries.get(i);
-            String key = entry.getId();
-            if (key.contains(":")) {
-                key = key.split(":")[1];
-            }
+            String key = getKey(entry);
             if (entry.getData() == null) {
                 CACHE_LOG.error("Null data for biome registry key: {}", key);
                 continue;
@@ -136,6 +140,14 @@ public class RegistriesCache implements CachedData {
         registryEntries.forEach((registry, entries) -> consumer.accept(new ClientboundRegistryDataPacket(registry, entries)));
     }
 
+    private String getKey(RegistryEntry entry) {
+        String key = entry.getId();
+        if (key.contains(":")) {
+            key = key.split(":")[1];
+        }
+        return key;
+    }
+
     @Override
     public void reset(final CacheResetType type) {
         if (type == CacheResetType.FULL) {
@@ -144,6 +156,7 @@ public class RegistriesCache implements CachedData {
             EnchantmentRegistry.REGISTRY.reset();
             ChatTypeRegistry.REGISTRY.reset();
             BiomeRegistry.REGISTRY.reset();
+            DamageTypeRegistry.REGISTRY.reset();
         }
     }
 }

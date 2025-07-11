@@ -7,14 +7,13 @@ import com.zenith.cache.DataCache;
 import com.zenith.event.player.PlayerLoginEvent;
 import com.zenith.network.codec.PostOutgoingPacketHandler;
 import com.zenith.network.server.ServerSession;
-import com.zenith.util.ComponentSerializer;
 import com.zenith.via.ZenithViaInitializer;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.jspecify.annotations.NonNull;
 
 import static com.zenith.Globals.*;
+import static com.zenith.util.ComponentSerializer.minimessage;
 
 public class LoginPostHandler implements PostOutgoingPacketHandler<ClientboundLoginPacket, ServerSession> {
     @Override
@@ -41,22 +40,24 @@ public class LoginPostHandler implements PostOutgoingPacketHandler<ClientboundLo
             session.send(connection.getEntitySpawnPacket());
             session.send(connection.getEntityMetadataPacket());
         }
-        if (CONFIG.client.extra.chat.hideChat) {
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<gray>Chat is currently disabled. To enable chat, type <red>/togglechat"), false));
-        }
-        if (CONFIG.client.extra.chat.hideWhispers) {
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<gray>Whispers are currently disabled. To enable whispers, type <red>/toggleprivatemsgs"), false));
-        }
-        if (CONFIG.client.extra.chat.showConnectionMessages) {
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<gray>Connection messages enabled. To disable, type <red>/toggleconnectionmsgs"), false));
-        }
-        if (CONFIG.client.extra.chat.hideDeathMessages) {
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<gray>Death messages are currently disabled. To enable death messages, type <red>/toggledeathmsgs"), false));
-        }
-        session.sendAsyncAlert("<green>Connected to <red>" + CACHE.getProfileCache().getProfile().getName());
-        if (CONFIG.inGameCommands.enable && !CONFIG.inGameCommands.slashCommands) {
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<green>Command Prefix : \"" + CONFIG.inGameCommands.prefix + "\""), false));
-            session.send(new ClientboundSystemChatPacket(ComponentSerializer.minimessage("<red>help <gray>- <dark_gray>List Commands"), false));
+        if (CONFIG.server.welcomeMessages) {
+            if (CONFIG.client.extra.chat.hideChat) {
+                session.sendAsyncMessage(minimessage("<gray>Chat is currently disabled. To enable chat, type <red>/togglechat"));
+            }
+            if (CONFIG.client.extra.chat.hideWhispers) {
+                session.sendAsyncMessage(minimessage("<gray>Whispers are currently disabled. To enable whispers, type <red>/toggleprivatemsgs"));
+            }
+            if (CONFIG.client.extra.chat.showConnectionMessages) {
+                session.sendAsyncMessage(minimessage("<gray>Connection messages enabled. To disable, type <red>/toggleconnectionmsgs"));
+            }
+            if (CONFIG.client.extra.chat.hideDeathMessages) {
+                session.sendAsyncMessage(minimessage("<gray>Death messages are currently disabled. To enable death messages, type <red>/toggledeathmsgs"));
+            }
+            session.sendAsyncAlert("<green>Connected to <red>" + CACHE.getProfileCache().getProfile().getName());
+            if (CONFIG.inGameCommands.enable && !CONFIG.inGameCommands.slashCommands) {
+                session.sendAsyncMessage(minimessage("<green>Command Prefix : \"" + CONFIG.inGameCommands.prefix + "\""));
+                session.sendAsyncMessage(minimessage("<red>help <gray>- <dark_gray>List Commands"));
+            }
         }
     }
 
