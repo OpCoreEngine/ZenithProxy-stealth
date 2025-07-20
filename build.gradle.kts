@@ -25,9 +25,9 @@ repositories {
     mavenLocal()
 }
 
-val mcplVersion = "1.21.7.3"
+val mcplVersion = "1.21.8.1"
 dependencies {
-    api("com.github.rfresh2:JDA:5.6.14") {
+    api("com.github.rfresh2:JDA:6.0.15-rc.1_b69da49") {
         exclude(group = "club.minnced")
         exclude(group = "net.java.dev.jna")
         exclude(group = "com.google.crypto.tink")
@@ -35,7 +35,7 @@ dependencies {
     api("com.github.rfresh2:MCProtocolLib:$mcplVersion") {
         exclude(group = "io.netty")
     }
-    api(platform("io.netty:netty-bom:4.2.2.Final"))
+    api(platform("io.netty:netty-bom:4.2.3.Final"))
     api("io.netty:netty-buffer")
     api("io.netty:netty-codec-haproxy")
     api("io.netty:netty-codec-dns")
