@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.zenith"
-version = "1.21.7"
+version = "1.21.8"
 
 val javaReleaseVersion = 21
 val javaVersion = JavaLanguageVersion.of(24)
