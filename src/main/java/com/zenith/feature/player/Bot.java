@@ -1266,9 +1266,8 @@ public final class Bot extends ModuleUtils {
                 sendClientPacketAwait(new ServerboundAcceptTeleportationPacket(packet.getId()));
                 sendClientPacketAwait(new ServerboundMovePlayerPosRotPacket(false, false, x, y, z, yaw, pitch));
             }
-            return false;
         }
-        return true;
+        return !CACHE.getPlayerCache().getTeleportQueue().isEmpty();
     }
 
     public void updateAttributes() {
