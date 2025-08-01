@@ -1,7 +1,7 @@
 plugins {
     `java-library`
-    id("org.graalvm.buildtools.native") version "0.10.6"
-    id("com.gradleup.shadow") version "9.0.0-rc1"
+    id("org.graalvm.buildtools.native") version "0.11.0"
+    id("com.gradleup.shadow") version "9.0.0-rc2"
     `maven-publish`
 }
 
@@ -25,7 +25,7 @@ repositories {
     mavenLocal()
 }
 
-val mcplVersion = "1.21.8.1"
+val mcplVersion = "1.21.8.2"
 dependencies {
     api("com.github.rfresh2:JDA:6.0.16") {
         exclude(group = "club.minnced")
@@ -73,7 +73,7 @@ dependencies {
     api("org.jline:jline:3.30.4")
     api("org.jline:jline-terminal-jni:3.30.4")
     api("ar.com.hjg:pngj:2.1.0")
-    api("com.zaxxer:HikariCP:6.3.0")
+    api("com.zaxxer:HikariCP:7.0.0")
     api("org.postgresql:postgresql:42.7.7")
     api("org.jdbi:jdbi3-postgres:3.49.5")
     api("com.google.guava:guava:33.4.6-jre")
@@ -81,11 +81,11 @@ dependencies {
     api("org.slf4j:slf4j-api:2.0.17")
     api("org.slf4j:jul-to-slf4j:2.0.17")
     api("com.mojang:brigadier:1.3.10")
-    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.1")
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2")
     api("org.jspecify:jspecify:1.0.0")
-    api("net.kyori:adventure-text-logger-slf4j:4.23.0")
+    api("net.kyori:adventure-text-logger-slf4j:4.24.0")
     api("dev.omega24:upnp4j:1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     val lombokVersion = "1.18.38"
     compileOnly("org.projectlombok:lombok:$lombokVersion")
@@ -140,7 +140,7 @@ tasks {
         javaLauncher = javaLauncherProvider
     }
     processResources {
-        dependsOn(releaseTagTask, mcVersionTask, commitHashTask)
+        dependsOn(releaseTagTask, mcVersionTask, commitHashTask, javaPathTask)
     }
     val devOutputDir = layout.buildDirectory.get().dir("dev").asFile
     jar {
@@ -188,15 +188,15 @@ tasks {
             ))
         }
     }
-    val jarBuildTask = register("jarBuild") {
-        group = "build"
-        dependsOn(shadowJar, build, javaPathTask)
-    }
     nativeCompile {
+        notCompatibleWithConfigurationCache("not compatible with configuration cache")
         classpathJar = shadowJar.flatMap { it.archiveFile }
-        dependsOn(jarBuildTask)
+        dependsOn(build)
     }
-    generateResourcesConfigFile { dependsOn(shadowJar) }
+    generateResourcesConfigFile {
+        notCompatibleWithConfigurationCache("not compatible with configuration cache")
+        dependsOn(shadowJar)
+    }
 }
 
 graalvmNative {
