@@ -170,6 +170,7 @@ public class Proxy {
             }
             NotificationEventListener.INSTANCE.subscribeEvents();
             ChatRelayEventListener.INSTANCE.subscribeEvents();
+            com.zenith.feature.motdspoofer.MotdSpooferListener.init();
             if (CONFIG.plugins.enabled) PLUGIN_MANAGER.initialize();
             Queue.start();
             saveConfigAsync();

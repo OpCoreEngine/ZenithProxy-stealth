@@ -70,6 +70,7 @@ public class CommandManager {
         new KillAuraCommand(),
         new LicenseCommand(),
         new MapCommand(),
+        new MotdSpooferCommand(),
         new PathfinderCommand(),
         new PearlLoader(),
         new PlaytimeCommand(),

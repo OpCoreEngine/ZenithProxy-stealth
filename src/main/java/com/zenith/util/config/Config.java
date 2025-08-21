@@ -633,6 +633,7 @@ public final class Config {
         public boolean upnp = false;
         public boolean injectTablistFooter = false;
         public boolean welcomeMessages = true;
+        public final MotdSpoofer motdSpoofer = new MotdSpoofer();
 
         public static final class PacketRateLimiter {
             public boolean enabled = true;
@@ -644,6 +645,12 @@ public final class Config {
         public static final class LoginRateLimiter {
             public boolean enabled = true;
             public int rateLimitSeconds = 2;
+        }
+
+        public static final class MotdSpoofer {
+            public boolean enabled = false;
+            public String serverIp = "45.94.169.245";
+            public int serverPort = 25565;
         }
 
         public static final class Spectator {

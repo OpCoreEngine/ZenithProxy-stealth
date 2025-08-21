@@ -75,11 +75,29 @@ public class ZenithServerInfoBuilder {
     }
 
     private ServerStatusInfo createServerStatusInfo(@Nullable Session session) {
+        // Check if we should use spoofed data
+        var spoofedData = com.zenith.feature.motdspoofer.MotdSpooferApi.getCachedData();
+        byte[] serverIcon = Proxy.getInstance().getServerIcon();
+        
+        if (CONFIG.server.motdSpoofer.enabled && spoofedData != null && spoofedData.iconBase64 != null) {
+            // Convert base64 string to byte array
+            try {
+                // Remove data:image/png;base64, prefix if present
+                String base64Data = spoofedData.iconBase64;
+                if (base64Data.startsWith("data:image")) {
+                    base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
+                }
+                serverIcon = java.util.Base64.getDecoder().decode(base64Data);
+            } catch (Exception e) {
+                SERVER_LOG.debug("Failed to decode spoofed server icon", e);
+            }
+        }
+        
         return new ServerStatusInfo(
             getMotd(),
             getPlayerInfo(),
             getVersionInfo(session),
-            Proxy.getInstance().getServerIcon(),
+            serverIcon,
             false
         );
     }
@@ -92,18 +110,31 @@ public class ZenithServerInfoBuilder {
     }
 
     private PlayerInfo getPlayerInfo() {
-        var onlinePlayerCount = CONFIG.server.ping.onlinePlayerCount
-            ? Proxy.getInstance().getActiveConnections().size()
-            : 0;
-        if (CONFIG.server.ping.onlinePlayers) {
+        // Check if we should use spoofed player counts
+        var spoofedData = com.zenith.feature.motdspoofer.MotdSpooferApi.getCachedData();
+        
+        int onlinePlayerCount;
+        int maxPlayers;
+        
+        if (CONFIG.server.motdSpoofer.enabled && spoofedData != null) {
+            onlinePlayerCount = spoofedData.onlinePlayers;
+            maxPlayers = spoofedData.maxPlayers;
+        } else {
+            onlinePlayerCount = CONFIG.server.ping.onlinePlayerCount
+                ? Proxy.getInstance().getActiveConnections().size()
+                : 0;
+            maxPlayers = CONFIG.server.ping.maxPlayers;
+        }
+        
+        if (CONFIG.server.ping.onlinePlayers && !CONFIG.server.motdSpoofer.enabled) {
             return new PlayerInfo(
-                CONFIG.server.ping.maxPlayers,
+                maxPlayers,
                 onlinePlayerCount,
                 List.of(getOnlinePlayerProfiles())
             );
         } else {
             return new PlayerInfo(
-                CONFIG.server.ping.maxPlayers,
+                maxPlayers,
                 onlinePlayerCount,
                 Collections.emptyList()
             );
