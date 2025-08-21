@@ -72,7 +72,7 @@ public class LoginSpectatorPostHandler implements PostOutgoingPacketHandler<Clie
         }
         // send command help
         if (CONFIG.server.welcomeMessages) {
-            session.sendAsyncAlert("<green>Spectating <red>" + CACHE.getProfileCache().getProfile().getName());
+            // Removed "Spectating" message
             if (CONFIG.inGameCommands.enable) {
                 session.sendAsyncMessage(minimessage("<green>Command Prefix : \"" + CONFIG.inGameCommands.prefix + "\""));
                 session.sendAsyncMessage(minimessage("<red>help <gray>- <dark_gray>List Commands"));

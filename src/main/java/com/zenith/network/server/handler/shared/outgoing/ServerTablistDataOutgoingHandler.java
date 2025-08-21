@@ -23,7 +23,7 @@ public class ServerTablistDataOutgoingHandler implements PacketHandler<Clientbou
     @Override
     public ClientboundTabListPacket apply(ClientboundTabListPacket packet, ServerSession session) {
         CACHE.getTabListCache().setLastUpdate(System.currentTimeMillis());
-        return new ClientboundTabListPacket(packet.getHeader(), insertProxyDataIntoFooter(packet.getFooter(), session));
+        return packet; // Directly return the original packet without modification
     }
 
     public Component insertProxyDataIntoFooter(final Component footer, final ServerSession session) {

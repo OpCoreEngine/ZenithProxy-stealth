@@ -53,7 +53,7 @@ public class LoginPostHandler implements PostOutgoingPacketHandler<ClientboundLo
             if (CONFIG.client.extra.chat.hideDeathMessages) {
                 session.sendAsyncMessage(minimessage("<gray>Death messages are currently disabled. To enable death messages, type <red>/toggledeathmsgs"));
             }
-            session.sendAsyncAlert("<green>Connected to <red>" + CACHE.getProfileCache().getProfile().getName());
+            // Removed "Connected to" message
             if (CONFIG.inGameCommands.enable && !CONFIG.inGameCommands.slashCommands) {
                 session.sendAsyncMessage(minimessage("<green>Command Prefix : \"" + CONFIG.inGameCommands.prefix + "\""));
                 session.sendAsyncMessage(minimessage("<red>help <gray>- <dark_gray>List Commands"));
