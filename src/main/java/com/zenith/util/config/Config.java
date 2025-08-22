@@ -372,6 +372,10 @@ public final class Config {
                 public boolean enabled = false;
                 public float yaw = 0.0f;
                 public float pitch = 0.0f;
+                public boolean randomYawPitch = false;
+                public float randomYawRange = 5.0f;
+                public float randomPitchRange = 3.0f;
+                public boolean pauseOnContainerOpen = true;
             }
 
             public static final class AntiAFK {

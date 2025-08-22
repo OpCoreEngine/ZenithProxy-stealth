@@ -13,6 +13,8 @@ import org.cloudburstmc.math.vector.Vector2d;
 import static com.zenith.Globals.*;
 import static com.zenith.command.brigadier.RotationArgument.getRotation;
 import static com.zenith.command.brigadier.RotationArgument.rotation;
+import static com.mojang.brigadier.arguments.FloatArgumentType.floatArg;
+import static com.mojang.brigadier.arguments.FloatArgumentType.getFloat;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
 import static com.zenith.command.brigadier.ToggleArgumentType.toggle;
 
@@ -30,7 +32,10 @@ public class AutoFishCommand extends Command {
             .usageLines(
                 "on/off",
                 "rotation <yaw> <pitch>",
-                "rotation sync"
+                "rotation sync",
+                "randomYawPitch on/off",
+                "randomRange <yaw> <pitch>",
+                "pauseOnContainer on/off"
             )
             .build();
     }
@@ -59,6 +64,30 @@ public class AutoFishCommand extends Command {
                     CONFIG.client.extra.autoFish.pitch = (float) rot.getY();
                     c.getSource().getEmbed()
                         .title("Rotation set to " + CONFIG.client.extra.autoFish.yaw + " " + CONFIG.client.extra.autoFish.pitch);
+                })))
+            .then(literal("randomYawPitch")
+                .then(argument("toggle", toggle()).executes(c -> {
+                    CONFIG.client.extra.autoFish.randomYawPitch = getToggle(c, "toggle");
+                    c.getSource().getEmbed()
+                        .title("Random Yaw/Pitch " + toggleStr(CONFIG.client.extra.autoFish.randomYawPitch));
+                    return OK;
+                })))
+            .then(literal("randomRange")
+                .then(argument("yawRange", floatArg(0, 45)).then(argument("pitchRange", floatArg(0, 20)).executes(c -> {
+                    CONFIG.client.extra.autoFish.randomYawRange = getFloat(c, "yawRange");
+                    CONFIG.client.extra.autoFish.randomPitchRange = getFloat(c, "pitchRange");
+                    c.getSource().getEmbed()
+                        .title("Random Range")
+                        .addField("Yaw Range", "±" + CONFIG.client.extra.autoFish.randomYawRange, true)
+                        .addField("Pitch Range", "±" + CONFIG.client.extra.autoFish.randomPitchRange, true);
+                    return OK;
+                }))))
+            .then(literal("pauseOnContainer")
+                .then(argument("toggle", toggle()).executes(c -> {
+                    CONFIG.client.extra.autoFish.pauseOnContainerOpen = getToggle(c, "toggle");
+                    c.getSource().getEmbed()
+                        .title("Pause on Container Open " + toggleStr(CONFIG.client.extra.autoFish.pauseOnContainerOpen));
+                    return OK;
                 })));
     }
 
@@ -68,6 +97,10 @@ public class AutoFishCommand extends Command {
             .addField("AutoFish", toggleStr(CONFIG.client.extra.autoFish.enabled), false)
             .addField("Yaw", CONFIG.client.extra.autoFish.yaw, false)
             .addField("Pitch", CONFIG.client.extra.autoFish.pitch, false)
+            .addField("Random Yaw/Pitch", toggleStr(CONFIG.client.extra.autoFish.randomYawPitch), false)
+            .addField("Random Yaw Range", "±" + CONFIG.client.extra.autoFish.randomYawRange, false)
+            .addField("Random Pitch Range", "±" + CONFIG.client.extra.autoFish.randomPitchRange, false)
+            .addField("Pause on Container", toggleStr(CONFIG.client.extra.autoFish.pauseOnContainerOpen), false)
             .primaryColor();
     }
 }

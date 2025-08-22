@@ -26,6 +26,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.Clien
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Random;
 
 import static com.github.rfresh2.EventConsumer.of;
 import static com.zenith.Globals.*;
@@ -37,6 +38,10 @@ public class AutoFish extends AbstractInventoryModule {
     public static final int MOVEMENT_PRIORITY = 10;
     private Instant castTime = Instant.EPOCH;
     private int fishTimeoutCounter = 0;
+    private final Random random = new Random();
+    private float currentYaw = 0.0f;
+    private float currentPitch = 0.0f;
+    private boolean needsNewRotation = true;
 
     public AutoFish() {
         super(HandRestriction.EITHER, 2, MOVEMENT_PRIORITY);
@@ -83,6 +88,7 @@ public class AutoFish extends AbstractInventoryModule {
         delay = 0;
         castTime = Instant.EPOCH;
         fishTimeoutCounter = 0;
+        needsNewRotation = true;
     }
 
     public void handleEntityFishHookSpawnEvent(final EntityFishHookSpawnEvent event) {
@@ -96,6 +102,10 @@ public class AutoFish extends AbstractInventoryModule {
 
     public void handleSplashSoundEffectEvent(final SplashSoundEffectEvent event) {
         if (!isFishing()) return;
+        if (CONFIG.client.extra.autoFish.pauseOnContainerOpen && isContainerOpen()) {
+            debug("AutoFish: Container is open, skipping reel in");
+            return;
+        }
         var fishHookEntity = CACHE.getEntityCache().get(fishHookEntityId);
         if (fishHookEntity == null) return;
         if (MathHelper.manhattanDistance3d(
@@ -109,6 +119,7 @@ public class AutoFish extends AbstractInventoryModule {
                     fishHookEntityId = -1;
                     delay = 20;
                     fishTimeoutCounter = 0;
+                    needsNewRotation = true; // Generate new rotation for next cast
                 }
             }
         });
@@ -119,6 +130,13 @@ public class AutoFish extends AbstractInventoryModule {
             delay--;
             return;
         }
+        
+        // Check if container is open before any fishing action
+        if (CONFIG.client.extra.autoFish.pauseOnContainerOpen && isContainerOpen()) {
+            debug("AutoFish: Container is open, pausing fishing actions");
+            return;
+        }
+        
         if (!isFishing()
             && switchToFishingRod()
             && isRodInHand()) {
@@ -155,6 +173,35 @@ public class AutoFish extends AbstractInventoryModule {
     }
 
     private InputRequestFuture requestUseRod(boolean cast) {
+        float targetYaw;
+        float targetPitch;
+        
+        if (CONFIG.client.extra.autoFish.randomYawPitch) {
+            // Generate new rotation only when needed (after catching a fish or first cast)
+            if (needsNewRotation && cast) {
+                float yawVariation = (random.nextFloat() * 2 - 1) * CONFIG.client.extra.autoFish.randomYawRange;
+                float pitchVariation = (random.nextFloat() * 2 - 1) * CONFIG.client.extra.autoFish.randomPitchRange;
+                
+                currentYaw = CONFIG.client.extra.autoFish.yaw + yawVariation;
+                currentPitch = CONFIG.client.extra.autoFish.pitch + pitchVariation;
+                
+                // Clamp pitch to valid range (-90 to 90)
+                currentPitch = Math.max(-90.0f, Math.min(90.0f, currentPitch));
+                
+                // Normalize yaw to -180 to 180 range
+                while (currentYaw > 180.0f) currentYaw -= 360.0f;
+                while (currentYaw < -180.0f) currentYaw += 360.0f;
+                
+                needsNewRotation = false;
+                debug("AutoFish: New random rotation - Yaw: " + currentYaw + ", Pitch: " + currentPitch);
+            }
+            targetYaw = currentYaw;
+            targetPitch = currentPitch;
+        } else {
+            targetYaw = CONFIG.client.extra.autoFish.yaw;
+            targetPitch = CONFIG.client.extra.autoFish.pitch;
+        }
+        
         return INPUTS.submit(InputRequest.builder()
             .owner(this)
             .input(Input.builder()
@@ -163,8 +210,8 @@ public class AutoFish extends AbstractInventoryModule {
                 .hand(rodHand)
                 .clickRequiresRotation(cast)
                 .build())
-            .yaw(CONFIG.client.extra.autoFish.yaw)
-            .pitch(CONFIG.client.extra.autoFish.pitch)
+            .yaw(targetYaw)
+            .pitch(targetPitch)
             .priority(MOVEMENT_PRIORITY)
             .build());
     }
@@ -185,6 +232,11 @@ public class AutoFish extends AbstractInventoryModule {
             && ((ProjectileData) standard.getObjectData()).getOwnerId() == CACHE.getPlayerCache().getEntityId();
     }
 
+    private boolean isContainerOpen() {
+        // Check if any container other than player inventory (id=0) is open
+        return CACHE.getPlayerCache().getInventoryCache().getOpenContainerId() != 0;
+    }
+    
     @Override
     public boolean itemPredicate(final ItemStack itemStack) {
         return itemStack != Container.EMPTY_STACK && itemStack.getId() == ItemRegistry.FISHING_ROD.id();
