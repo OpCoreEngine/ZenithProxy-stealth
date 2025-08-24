@@ -43,6 +43,7 @@ public class CommandManager {
         new AutoReconnectCommand(),
         new AutoReplyCommand(),
         new AutoRespawnCommand(),
+        new AutoSolverCommand(),
         new AutoTotemCommand(),
         new AutoUpdateCommand(),
         new ChatHistoryCommand(),

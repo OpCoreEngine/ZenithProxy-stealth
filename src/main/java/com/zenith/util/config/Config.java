@@ -157,6 +157,7 @@ public final class Config {
             public final PearlLoader pearlLoader = new PearlLoader();
             public final Waypoints waypoints = new Waypoints();
             public final GlowingEffect glowingEffect = new GlowingEffect();
+            public final AutoSolver autoSolver = new AutoSolver();
             public String whisperCommand = "msg";
 
             public static final class Waypoints {
@@ -393,6 +394,10 @@ public final class Config {
                 public float randomYawRange = 5.0f;
                 public float randomPitchRange = 3.0f;
                 public boolean pauseOnContainerOpen = true;
+            }
+
+            public static final class AutoSolver {
+                public boolean enabled = false;
             }
 
             public static final class AntiAFK {

@@ -28,6 +28,7 @@ public class ModuleManager {
             new AutoReconnect(),
             new AutoReply(),
             new AutoRespawn(),
+            new AutoSolver(),
             new AutoTotem(),
             new ChatHistory(),
             new Click(),
