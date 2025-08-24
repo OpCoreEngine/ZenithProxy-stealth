@@ -156,6 +156,7 @@ public final class Config {
             public final SpawnPatrol spawnPatrol = new SpawnPatrol();
             public final PearlLoader pearlLoader = new PearlLoader();
             public final Waypoints waypoints = new Waypoints();
+            public final GlowingEffect glowingEffect = new GlowingEffect();
             public String whisperCommand = "msg";
 
             public static final class Waypoints {
@@ -291,6 +292,22 @@ public final class Config {
 
             public static class AutoArmor {
                 public boolean enabled = false;
+            }
+
+            public static class GlowingEffect {
+                public boolean enabled = false;
+                public boolean enhancedNameTags = true;
+                public boolean showThroughWalls = true;
+                public String nameTagColor = "YELLOW";
+                public String labelColor = "RED";
+                public String nameTagText = "⚡ {player} ⚡";
+                public String labelText = "● PLAYER ●";
+                public boolean showMobs = true;
+                public boolean showMobHealth = true;
+                public String mobNameTagColor = "WHITE";
+                public String mobHealthColor = "GREEN";
+                public String mobNameTagText = "🐺 {mob}";
+                public String mobHealthText = "❤ {health}/{maxHealth}";
             }
 
             public static class AntiKick {

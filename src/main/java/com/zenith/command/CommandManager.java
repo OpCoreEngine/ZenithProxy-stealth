@@ -62,6 +62,7 @@ public class CommandManager {
         new DisplayCoordsCommand(),
         new ExtraChatCommand(),
         new FriendCommand(),
+        new GlowingEffectCommand(),
         new HelpCommand(),
         new IgnoreCommand(),
         new InventoryCommand(),
